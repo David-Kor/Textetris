@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "Input.h"
-#include <conio.h>
 
 Input::Input()
 {

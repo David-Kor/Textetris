@@ -1,11 +1,54 @@
-﻿#include "pch.h"
+﻿/*	프로젝트	: Textris(텍스트리스) -> 텍스트 + 테트리스
+ *	제작자	: 백다윗
+ *	개발시작	: 2019.07.03
+ *	개발환경	: VisualStudio Community 2017
+ *	대상OS	: Windows
+ *	설명		: 윈도우즈 CMD 콘솔 창(DOS)을 이용한 텍스트 기반의 테트리스 게임
+ *	조작키	: 키보드 방향키(↑, ↓, ←, →) / 스페이스 바 / 엔터 / ESC키
+ */
+#include "pch.h"
 #define	SINGLE_GAME	1
 #define	MULTI_GAME	2
 #define	QUIT_GAME		3
+#define	MAX_WORD		80
+#define	MAX_LINE			25
+#define	MN_1_LINE		11
+#define	MN_2_LINE		13
+#define	MN_3_LINE		15
 
 using namespace std;
 
-Input g_Input;
+//전역 변수들
+Input g_Input;	//키 입력 담당 클래스
+Renderer g_Renderer(MAX_WORD, MAX_LINE);		//콘솔화면 출력 담당 클래스
+wstring g_wstrMainMenu[MAX_LINE] = {
+/*1*/		L"　　　　■■■ ■■■ ■　　　■ ■■■ ■■■　 ■■■  ■■■\n",
+/*2*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 ■\n",
+/*3*/		L"　　　　　■　 ■■■ 　　■　　 　■　 ■■■　 　■　  ■■■\n",
+/*4*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 　　　■\n",
+/*5*/		L"　　　　　■　 ■■■ ■　　　■ 　■　 ■　　■ ■■■  ■■■\n",
+/*6*/		L"\n",
+/*7*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n",
+/*8*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n",
+/*9*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
+/*10*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
+/*11*/		L"",
+/*12*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
+/*13*/		L"",
+/*14*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
+/*15*/		L"",
+/*16*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
+/*17*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
+/*18*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n",
+/*19*/		L"",
+/*20*/		L"",
+/*21*/		L"",
+/*22*/		L"",
+/*23*/		L"",
+/*24*/		L"",
+/*25*/		L""
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //초기화
 void InitializeSgGm()
@@ -26,11 +69,11 @@ void SingleGameMain()
 }
 
 //문자열 내에 from 문자열을 찾아 to로 바꿈
-string* ReplaceFirstString(string* str, const string &from, const string &to)
+wstring* ReplaceFirstString(wstring* str, const wstring &from, const wstring &to)
 {
 	size_t szPos = 0;
 
-	if ((szPos = str->find(from, szPos)) != string::npos)
+	if ((szPos = str->find(from, szPos)) != wstring::npos)
 	{
 		str->replace(szPos, from.length(), to);
 	}
@@ -43,20 +86,21 @@ unsigned char MainMenuPrint(const char cMoveDirect)
 {
 	static unsigned char ucSelected = 1;
 
-	system("cls");
-	string strMnSingle = "■　　　▷　1.　혼자하기　　　　　　　　　　　　　　　　　　　　　　　■";
-	string strMnMulti = "■　　　▷　2.　같이하기　　　　　　　　　　　　　　　　　　　　　　　■";
-	string strMnQuit = "■　　　▷　3.　끝내기　　　　　　　　　　　　　　　　　　　　　　　　■";
+	static wstring strMnSingle = L"■　　　▷　1.　혼자하기　　　　　　　　　　　　　　　　　　　　　　　■";
+	static wstring strMnMulti = L"■　　　▷　2.　같이하기　　　　　　　　　　　　　　　　　　　　　　　■";
+	static wstring strMnQuit = L"■　　　▷　3.　끝내기　　　　　　　　　　　　　　　　　　　　　　　　■";
 
 	size_t szPos = 0;
-	string strNoSelected = "▷";
-	string strSelected = "▶";
+	static const wstring strNoSelected = L"▷"; //비선택 메뉴 표시
+	static const wstring strSelected = L"▶";		//선택된 메뉴 표시
 
 	//범위 제한
 	ucSelected += cMoveDirect;
 	if (ucSelected == 0) { ucSelected = 3; }
 	else if (ucSelected == 4) { ucSelected = 1; }
 
+	//현재 선택한 메뉴 : ▶ 표시
+	//나머지 메뉴 : ▷ 표시
 	switch (ucSelected)
 	{
 	case 1:
@@ -77,26 +121,12 @@ unsigned char MainMenuPrint(const char cMoveDirect)
 		break;
 	}
 
-	cout << endl;
-	cout << "　　　　■■■ ■■■ ■　　　■ ■■■ ■■■　 ■■■  ■■■" << endl;
-	cout << "　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 ■" << endl;
-	cout << "　　　　　■　 ■■■ 　　■　　 　■　 ■■■　 　■　  ■■■" << endl;
-	cout << "　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 　　　■" << endl;
-	cout << "　　　　　■　 ■■■ ■　　　■ 　■　 ■　　■ ■■■  ■■■" << endl;
-	cout << endl;
-	cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■" << endl;
-	cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■" << endl;
-	cout << "■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■" << endl;
-	cout << "■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■" << endl;
-	cout << strMnSingle << endl;
-	cout << "■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■" << endl;
-	cout << strMnMulti << endl;
-	cout << "■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■" << endl;
-	cout << strMnQuit << endl;
-	cout << "■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■" << endl;
-	cout << "■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■" << endl;
-	cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■" << endl;
-	cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■" << endl;
+	g_wstrMainMenu[MN_1_LINE] = strMnSingle;
+	g_wstrMainMenu[MN_2_LINE] = strMnMulti;
+	g_wstrMainMenu[MN_3_LINE] = strMnQuit;	
+
+	g_Renderer.UpdateBuffer(g_wstrMainMenu, MAX_LINE);
+	g_Renderer.Rendering();
 
 	return ucSelected;
 }
@@ -105,6 +135,7 @@ unsigned char MainMenuPrint(const char cMoveDirect)
 int main()
 {
 	setlocale(LC_ALL, "");	//유니코드 문자열 출력을 위한 locale설정
+
 	unsigned char ucSelected = MainMenuPrint(0);
 	int i;
 

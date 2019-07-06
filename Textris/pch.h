@@ -5,8 +5,8 @@
 //#include "Time.h"
 #include <iostream>
 #include <locale>
-#include <Windows.h>
 #include "Input.h"
 #include "GameBoard.h"
+#include "Renderer.h"
 
 #endif //PCH_H

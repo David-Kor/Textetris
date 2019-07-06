@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "Time.h"
-#include <time.h>
 
 Time::Time(const int nFPS = 60) :MAX_DELTA_TIME(1.5f / nFPS), MY_DELTA_TIME(1.0f / nFPS)
 {

@@ -1,5 +1,6 @@
 #ifndef _TIME_CLASS
 #define _TIME_CLASS
+#include <time.h>
 
 class Time
 {
