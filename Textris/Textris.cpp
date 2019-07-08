@@ -12,9 +12,9 @@
 #define	QUIT_GAME		3
 #define	MAX_WORD		80
 #define	MAX_LINE			25
-#define	MN_1_LINE		11
-#define	MN_2_LINE		13
-#define	MN_3_LINE		15
+#define	MN_1_LINE		10
+#define	MN_2_LINE		12
+#define	MN_3_LINE		14
 
 using namespace std;
 
@@ -32,11 +32,11 @@ wstring g_wstrMainMenu[MAX_LINE] = {
 /*8*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n",
 /*9*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
 /*10*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*11*/		L"",
+/*11*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
 /*12*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*13*/		L"",
+/*13*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
 /*14*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*15*/		L"",
+/*15*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
 /*16*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
 /*17*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
 /*18*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n",
@@ -54,7 +54,7 @@ wstring g_wstrMainMenu[MAX_LINE] = {
 void InitializeSgGm()
 {
 	system("cls");
-	//GameBoard();
+	GameBoard();
 }
 
 //게임 진행
@@ -86,9 +86,9 @@ unsigned char MainMenuPrint(const char cMoveDirect)
 {
 	static unsigned char ucSelected = 1;
 
-	static wstring strMnSingle = L"■　　　▷　1.　혼자하기　　　　　　　　　　　　　　　　　　　　　　　■";
-	static wstring strMnMulti = L"■　　　▷　2.　같이하기　　　　　　　　　　　　　　　　　　　　　　　■";
-	static wstring strMnQuit = L"■　　　▷　3.　끝내기　　　　　　　　　　　　　　　　　　　　　　　　■";
+	static wstring strMnSingle = L"■　　　▷　1.　혼자하기　　　　　　　　　　　　　　　　　　　　　　　■\n";
+	static wstring strMnMulti = L"■　　　▷　2.　같이하기　　　　　　　　　　　　　　　　　　　　　　　■\n";
+	static wstring strMnQuit = L"■　　　▷　3.　끝내기　　　　　　　　　　　　　　　　　　　　　　　　■\n";
 
 	size_t szPos = 0;
 	static const wstring strNoSelected = L"▷"; //비선택 메뉴 표시
@@ -135,7 +135,6 @@ unsigned char MainMenuPrint(const char cMoveDirect)
 int main()
 {
 	setlocale(LC_ALL, "");	//유니코드 문자열 출력을 위한 locale설정
-
 	unsigned char ucSelected = MainMenuPrint(0);
 	int i;
 

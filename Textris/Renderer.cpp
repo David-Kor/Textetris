@@ -42,10 +42,12 @@ void Renderer::UpdateBuffer(const std::wstring *pwStr, const size_t &count)
 {
 	DWORD dw;   //좌표를 저장하기 위한 구조채를 선언.
 	COORD CursorPosition = { 0, 0 };    //좌표 설정
+	
 	SetConsoleCursorPosition(mv_hBuffer[mv_nScreenIndex], CursorPosition);    //좌표 이동
+
 	for (size_t i = 0; i < count; i++)
 	{
-		WriteFile(mv_hBuffer[MonitorRequestReasonScreenOffRequest], &pwStr[i], pwStr[i].length(), &dw, NULL);    //버퍼에 씀
+		WriteConsoleW(mv_hBuffer[mv_nScreenIndex], pwStr[i].c_str(), pwStr[i].length(), &dw, NULL);		//버퍼에 씀
 	}
 }
 
