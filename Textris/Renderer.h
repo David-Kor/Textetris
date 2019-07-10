@@ -15,6 +15,7 @@ public:
 	~Renderer();
 
 	void UpdateBuffer(const std::wstring *pwStr, const size_t &count);
+	void UpdateBuffer(const std::wstring *pwStr, const size_t &count, const short cursorX);
 	void Rendering();
 	void ResetBuffer();
 };

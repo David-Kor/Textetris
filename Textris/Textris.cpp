@@ -21,25 +21,26 @@ using namespace std;
 //전역 변수들
 Input g_Input;	//키 입력 담당 클래스
 Renderer g_Renderer(MAX_WORD, MAX_LINE);		//콘솔화면 출력 담당 클래스
-wstring g_wstrMainMenu[MAX_LINE] = {
-/*1*/		L"　　　　■■■ ■■■ ■　　　■ ■■■ ■■■　 ■■■  ■■■\n",
-/*2*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 ■\n",
-/*3*/		L"　　　　　■　 ■■■ 　　■　　 　■　 ■■■　 　■　  ■■■\n",
-/*4*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 　　　■\n",
-/*5*/		L"　　　　　■　 ■■■ ■　　　■ 　■　 ■　　■ ■■■  ■■■\n",
-/*6*/		L"\n",
-/*7*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n",
-/*8*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n",
-/*9*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*10*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*11*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*12*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*13*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*14*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*15*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*16*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*17*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■\n",
-/*18*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n",
+GameBoard g_GameBoard;
+wstring g_wstrMainMenu[MAX_LINE] = {		//메인메뉴에 출력될 문자열
+/*1*/		L"　　　　■■■ ■■■ ■　　　■ ■■■ ■■■　 ■■■  ■■■",
+/*2*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 ■",
+/*3*/		L"　　　　　■　 ■■■ 　　■　　 　■　 ■■■　 　■　  ■■■",
+/*4*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 　　　■",
+/*5*/		L"　　　　　■　 ■■■ ■　　　■ 　■　 ■　　■ ■■■  ■■■",
+/*6*/		L"　",
+/*7*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■",
+/*8*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■",
+/*9*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*10*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*11*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*12*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*13*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*14*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*15*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*16*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*17*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*18*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■",
 /*19*/		L"",
 /*20*/		L"",
 /*21*/		L"",
@@ -53,8 +54,30 @@ wstring g_wstrMainMenu[MAX_LINE] = {
 //초기화
 void InitializeSgGm()
 {
-	system("cls");
-	GameBoard();
+	//출력버퍼 초기화
+	g_Renderer.ResetBuffer();
+	g_Renderer.Rendering();
+	g_Renderer.ResetBuffer();
+
+	wstring* pwstrBoard = g_GameBoard.GetBoard();
+	wstring* pwstrUI = g_GameBoard.GetUI();
+	wstring wstrPrint[25];
+
+	for (int i = 0; i < g_GameBoard.MAX_UI_LINE; i++)
+	{
+		wstrPrint[i] = L"";
+		if (i < g_GameBoard.MAX_VER_SIZE)
+		{
+			wstrPrint[i] += pwstrBoard[i];
+		}
+
+		wstrPrint[i] += pwstrUI[i];
+	}
+
+	g_Renderer.UpdateBuffer(wstrPrint, g_GameBoard.MAX_UI_LINE);
+	g_Renderer.UpdateBuffer(wstrPrint, g_GameBoard.MAX_UI_LINE, 26);
+	g_Renderer.UpdateBuffer(&wstrPrint[0], 1, 52);
+	g_Renderer.Rendering();
 }
 
 //게임 진행
@@ -136,7 +159,6 @@ int main()
 {
 	setlocale(LC_ALL, "");	//유니코드 문자열 출력을 위한 locale설정
 	unsigned char ucSelected = MainMenuPrint(0);
-	int i;
 
 	while (true)
 	{
