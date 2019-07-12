@@ -25,6 +25,10 @@ void GameBoard::CreateNextBlock()
 //블록의 MainBlk 위치에 따라 SubBlk위치를 갱신. 실패 시 이전상태로 되돌아감. 성공여부 반환
 bool GameBoard::UpdateBlock(Blocks* blk)
 {
+	if (blk == nullptr) {
+		return false;
+	}
+
 	Blocks blkPreState = *blk;
 
 	//서브블록 좌표 지정
@@ -369,9 +373,43 @@ bool GameBoard::UpdateBlock(Blocks* blk)
 		return false;
 	}
 
-	//mv_ucBoardTable 변경할 것
-
 	return true;
+}
+
+void GameBoard::UpdateBoardTable(Blocks* blk, bool isDropped)
+{
+	if ((blk->posMainBlk.Y == 0)	//메인 블럭이 대기 중(y=0)에 있을 때 블럭 전체 무시
+		|| (blk == nullptr)) {			//null값이면 무시
+		return;
+	}
+	
+	int i, j;
+	for (i = 0; i < MAX_HOR_SIZE; i++)
+	{
+		for (j = 0; j < MAX_VER_SIZE; j++)
+		{
+			//테이블의 해당자리가 2보다 작으면 0으로 초기화
+			if (mv_ucBoardTable[i][j] < 2) {
+				mv_ucBoardTable[i][j] = 0;
+			}
+		}
+	}
+
+	//블록을 테이블위에 구현 (현재 컨트롤중인 블록은 1, 컨트롤이 끝난 잔재블록은 2)
+	unsigned char ucDropValue = (isDropped) ? 1 : 0;
+
+	if (blk->posMainBlk.Y >= MARGIN_BOARD) {
+		mv_ucBoardTable[blk->posMainBlk.X][blk->posMainBlk.Y] = 1 + ucDropValue;
+	}
+	if (blk->posSubBlk1.Y >= MARGIN_BOARD) {
+		mv_ucBoardTable[blk->posSubBlk1.X][blk->posSubBlk1.Y] = 1 + ucDropValue;
+	}
+	if (blk->posSubBlk2.Y >= MARGIN_BOARD) {
+		mv_ucBoardTable[blk->posSubBlk2.X][blk->posSubBlk2.Y] = 1 + ucDropValue;
+	}
+	if (blk->posSubBlk3.Y >= MARGIN_BOARD) {
+		mv_ucBoardTable[blk->posSubBlk3.X][blk->posSubBlk3.Y] = 1 + ucDropValue;
+	}
 }
 
 GameBoard::GameBoard()
@@ -444,9 +482,9 @@ void GameBoard::RotateBlock()
 }
 
 //방향이 양수면 오른쪽, 음수면 왼쪽, 0이면 아래 이동
-void GameBoard::MoveBlock(unsigned char ucDirection)
+void GameBoard::MoveBlock(int nDirection)
 {
-	if (ucDirection > 0)
+	if (nDirection > 0)
 	{
 		//메인 블록이 우측 범위를 벗어나지 않는 경우
 		if (curBlk->posMainBlk.X + 1 < MAX_HOR_SIZE) {
@@ -456,7 +494,7 @@ void GameBoard::MoveBlock(unsigned char ucDirection)
 			}
 		}
 	}
-	else if (ucDirection < 0)
+	else if (nDirection < 0)
 	{
 		//메인 블록이 좌측 범위를 벗어나지 않는 경우
 		if (curBlk->posMainBlk.X - 1 >= 0) {

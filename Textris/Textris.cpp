@@ -76,7 +76,7 @@ void InitializeSgGm()
 
 	g_Renderer.UpdateBuffer(wstrPrint, g_GameBoard.MAX_UI_LINE);
 	g_Renderer.UpdateBuffer(wstrPrint, g_GameBoard.MAX_UI_LINE, 26);
-	g_Renderer.UpdateBuffer(&wstrPrint[0], 1, 52);
+	g_Renderer.UpdateBuffer(wstrPrint, g_GameBoard.MAX_UI_LINE, 52);
 	g_Renderer.Rendering();
 }
 
