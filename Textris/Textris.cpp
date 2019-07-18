@@ -1,7 +1,7 @@
 ﻿/*	프로젝트	: Textris(텍스트리스) -> 텍스트 + 테트리스
  *	제작자	: 백다윗
  *	개발시작	: 2019.07.03
- *	개발환경	: VisualStudio Community 2017
+ *	개발환경	: VisualStudio Community 2017 -> (19.07.16) VisualStudio Community 2019로 변경
  *	대상OS	: Windows
  *	설명		: 윈도우즈 CMD 콘솔 창(DOS)을 이용한 텍스트 기반의 테트리스 게임
  *	조작키	: 키보드 방향키(↑, ↓, ←, →) / 스페이스 바 / 엔터 / ESC키
@@ -59,24 +59,12 @@ void InitializeSgGm()
 	g_Renderer.Rendering();
 	g_Renderer.ResetBuffer();
 
-	wstring* pwstrBoard = g_GameBoard.GetBoard();
 	wstring* pwstrUI = g_GameBoard.GetUI();
-	wstring wstrPrint[25];
 
-	for (int i = 0; i < g_GameBoard.MAX_UI_LINE; i++)
-	{
-		wstrPrint[i] = L"";
-		if (i < g_GameBoard.MAX_VER_SIZE)
-		{
-			wstrPrint[i] += pwstrBoard[i];
-		}
-
-		wstrPrint[i] += pwstrUI[i];
-	}
-
-	g_Renderer.UpdateBuffer(wstrPrint, g_GameBoard.MAX_UI_LINE);
-	g_Renderer.UpdateBuffer(wstrPrint, g_GameBoard.MAX_UI_LINE, 26);
-	g_Renderer.UpdateBuffer(wstrPrint, g_GameBoard.MAX_UI_LINE, 52);
+	//g_GameBoard.MoveBlock(0);
+	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE);
+	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE, 26);
+	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE, 52);
 	g_Renderer.Rendering();
 }
 
