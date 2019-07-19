@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Blocks.h"
 
+//생성자
 Blocks::Blocks()
 {
 	//시드 변경
@@ -12,8 +13,62 @@ Blocks::Blocks()
 	posMainBlk.Y = 0;
 }
 
+//소멸자
 Blocks::~Blocks()
 {
+}
+
+//블록 전체가 X축 가운데에 오도록 배치
+void Blocks::SetXPositionToCenter(const short sMaxHorSize)
+{
+	switch (type)
+	{
+	case BlockType::I:
+	case BlockType::O:
+	case BlockType::S:
+		if (sMaxHorSize % 2 == 0) {	//size가 짝수
+			posMainBlk.X = sMaxHorSize / 2;
+		}
+		else {		//size가 홀수
+			posMainBlk.X = (sMaxHorSize + 1) / 2;
+		}
+		break;
+
+	case BlockType::T:
+		if (sMaxHorSize % 2 == 0) {	//size가 짝수
+			posMainBlk.X = sMaxHorSize / 2;
+		}
+		else {		//size가 홀수
+			posMainBlk.X = (sMaxHorSize - 1) / 2;
+		}
+		break;
+
+	case BlockType::L:
+		if (sMaxHorSize % 2 == 0) {	//size가 짝수
+			posMainBlk.X = (sMaxHorSize / 2) + 1;
+		}
+		else {		//size가 홀수
+			posMainBlk.X = (sMaxHorSize + 1) / 2;
+		}
+		break;
+
+	case BlockType::J:
+		if (sMaxHorSize % 2 == 0) {	//size가 짝수
+			posMainBlk.X = (sMaxHorSize / 2) - 1;
+		}
+		else {		//size가 홀수
+			posMainBlk.X = ((sMaxHorSize - 1) / 2) - 1;
+		}
+		break;
+	case BlockType::Z:
+		if (sMaxHorSize % 2 == 0) {	//size가 짝수
+			posMainBlk.X = (sMaxHorSize / 2) - 1;
+		}
+		else {		//size가 홀수
+			posMainBlk.X = (sMaxHorSize - 1) / 2;
+		}
+		break;
+	}
 }
 
 //MainBlk을 기준으로 SubBlk들의 좌표를 설정
@@ -27,13 +82,13 @@ void Blocks::PositionUpdate()
 		{
 		case 0: {
 			//1번 블록
-			posSubBlk1.X = posMainBlk.X - 1;
+			posSubBlk1.X = posMainBlk.X - 2;
 			posSubBlk1.Y = posMainBlk.Y;
 			//2번 블록
-			posSubBlk2.X = posMainBlk.X + 1;
+			posSubBlk2.X = posMainBlk.X - 1;
 			posSubBlk2.Y = posMainBlk.Y;
 			//3번 블록
-			posSubBlk3.X = posMainBlk.X + 2;
+			posSubBlk3.X = posMainBlk.X + 1;
 			posSubBlk3.Y = posMainBlk.Y;
 			break; }
 
@@ -53,12 +108,15 @@ void Blocks::PositionUpdate()
 
 		//ㅁ자형 블록
 	case BlockType::O:
-		posSubBlk1.X = posMainBlk.X + 1;
-		posSubBlk1.Y = posMainBlk.Y;
+		//1번 블록
+		posSubBlk1.X = posMainBlk.X - 1;
+		posSubBlk1.Y = posMainBlk.Y - 1;
+		//2번 블록
 		posSubBlk2.X = posMainBlk.X;
-		posSubBlk2.Y = posMainBlk.Y + 1;
-		posSubBlk2.X = posMainBlk.X + 1;
-		posSubBlk2.Y = posMainBlk.Y + 1;
+		posSubBlk2.Y = posMainBlk.Y - 1;
+		//3번 블록
+		posSubBlk2.X = posMainBlk.X - 1;
+		posSubBlk2.Y = posMainBlk.Y;
 		break;
 
 		//ㅗ자형 블록
@@ -121,30 +179,6 @@ void Blocks::PositionUpdate()
 		{
 		case 0: {
 			//1번 블록
-			posSubBlk1.X = posMainBlk.X + 1;
-			posSubBlk1.Y = posMainBlk.Y;
-			//2번 블록
-			posSubBlk2.X = posMainBlk.X + 2;
-			posSubBlk2.Y = posMainBlk.Y;
-			//3번 블록
-			posSubBlk3.X = posMainBlk.X;
-			posSubBlk3.Y = posMainBlk.Y + 1;
-			break; }
-
-		case 1: {
-			//1번 블록
-			posSubBlk1.X = posMainBlk.X;
-			posSubBlk1.Y = posMainBlk.Y - 1;
-			//2번 블록
-			posSubBlk2.X = posMainBlk.X;
-			posSubBlk2.Y = posMainBlk.Y - 2;
-			//3번 블록
-			posSubBlk3.X = posMainBlk.X + 1;
-			posSubBlk3.Y = posMainBlk.Y;
-			break; }
-
-		case 2: {
-			//1번 블록
 			posSubBlk1.X = posMainBlk.X - 1;
 			posSubBlk1.Y = posMainBlk.Y;
 			//2번 블록
@@ -155,7 +189,7 @@ void Blocks::PositionUpdate()
 			posSubBlk3.Y = posMainBlk.Y - 1;
 			break; }
 
-		case 3: {
+		case 1: {
 			//1번 블록
 			posSubBlk1.X = posMainBlk.X;
 			posSubBlk1.Y = posMainBlk.Y + 1;
@@ -164,6 +198,30 @@ void Blocks::PositionUpdate()
 			posSubBlk2.Y = posMainBlk.Y + 2;
 			//3번 블록
 			posSubBlk3.X = posMainBlk.X - 1;
+			posSubBlk3.Y = posMainBlk.Y;
+			break; }
+
+		case 2: {
+			//1번 블록
+			posSubBlk1.X = posMainBlk.X + 1;
+			posSubBlk1.Y = posMainBlk.Y;
+			//2번 블록
+			posSubBlk2.X = posMainBlk.X + 2;
+			posSubBlk2.Y = posMainBlk.Y;
+			//3번 블록
+			posSubBlk3.X = posMainBlk.X;
+			posSubBlk3.Y = posMainBlk.Y + 1;
+			break; }
+
+		case 3: {
+			//1번 블록
+			posSubBlk1.X = posMainBlk.X;
+			posSubBlk1.Y = posMainBlk.Y - 1;
+			//2번 블록
+			posSubBlk2.X = posMainBlk.X;
+			posSubBlk2.Y = posMainBlk.Y - 2;
+			//3번 블록
+			posSubBlk3.X = posMainBlk.X + 1;
 			posSubBlk3.Y = posMainBlk.Y;
 			break; }
 		}
@@ -175,30 +233,6 @@ void Blocks::PositionUpdate()
 		{
 		case 0: {
 			//1번 블록
-			posSubBlk1.X = posMainBlk.X - 1;
-			posSubBlk1.Y = posMainBlk.Y;
-			//2번 블록
-			posSubBlk2.X = posMainBlk.X - 2;
-			posSubBlk2.Y = posMainBlk.Y;
-			//3번 블록
-			posSubBlk3.X = posMainBlk.X;
-			posSubBlk3.Y = posMainBlk.Y + 1;
-			break; }
-
-		case 1: {
-			//1번 블록
-			posSubBlk1.X = posMainBlk.X;
-			posSubBlk1.Y = posMainBlk.Y - 1;
-			//2번 블록
-			posSubBlk2.X = posMainBlk.X;
-			posSubBlk2.Y = posMainBlk.Y - 2;
-			//3번 블록
-			posSubBlk3.X = posMainBlk.X - 1;
-			posSubBlk3.Y = posMainBlk.Y;
-			break; }
-
-		case 2: {
-			//1번 블록
 			posSubBlk1.X = posMainBlk.X + 1;
 			posSubBlk1.Y = posMainBlk.Y;
 			//2번 블록
@@ -209,7 +243,7 @@ void Blocks::PositionUpdate()
 			posSubBlk3.Y = posMainBlk.Y - 1;
 			break; }
 
-		case 3: {
+		case 1: {
 			//1번 블록
 			posSubBlk1.X = posMainBlk.X;
 			posSubBlk1.Y = posMainBlk.Y + 1;
@@ -218,6 +252,30 @@ void Blocks::PositionUpdate()
 			posSubBlk2.Y = posMainBlk.Y + 2;
 			//3번 블록
 			posSubBlk3.X = posMainBlk.X + 1;
+			posSubBlk3.Y = posMainBlk.Y;
+			break; }
+
+		case 2: {
+			//1번 블록
+			posSubBlk1.X = posMainBlk.X - 1;
+			posSubBlk1.Y = posMainBlk.Y;
+			//2번 블록
+			posSubBlk2.X = posMainBlk.X - 2;
+			posSubBlk2.Y = posMainBlk.Y;
+			//3번 블록
+			posSubBlk3.X = posMainBlk.X;
+			posSubBlk3.Y = posMainBlk.Y + 1;
+			break; }
+
+		case 3: {
+			//1번 블록
+			posSubBlk1.X = posMainBlk.X;
+			posSubBlk1.Y = posMainBlk.Y - 1;
+			//2번 블록
+			posSubBlk2.X = posMainBlk.X;
+			posSubBlk2.Y = posMainBlk.Y - 2;
+			//3번 블록
+			posSubBlk3.X = posMainBlk.X - 1;
 			posSubBlk3.Y = posMainBlk.Y;
 			break; }
 		}
@@ -229,26 +287,26 @@ void Blocks::PositionUpdate()
 		{
 		case 0: {
 			//1번 블록
-			posSubBlk1.X = posMainBlk.X - 1;
-			posSubBlk1.Y = posMainBlk.Y;
+			posSubBlk1.X = posMainBlk.X;
+			posSubBlk1.Y = posMainBlk.Y - 1;
 			//2번 블록
-			posSubBlk2.X = posMainBlk.X;
-			posSubBlk2.Y = posMainBlk.Y + 1;
+			posSubBlk2.X = posMainBlk.X - 1;
+			posSubBlk2.Y = posMainBlk.Y - 1;
 			//3번 블록
 			posSubBlk3.X = posMainBlk.X + 1;
-			posSubBlk3.Y = posMainBlk.Y + 1;
+			posSubBlk3.Y = posMainBlk.Y;
 			break; }
 
 		case 1: {
 			//1번 블록
-			posSubBlk1.X = posMainBlk.X;
-			posSubBlk1.Y = posMainBlk.Y + 1;
+			posSubBlk1.X = posMainBlk.X + 1;
+			posSubBlk1.Y = posMainBlk.Y;
 			//2번 블록
 			posSubBlk2.X = posMainBlk.X + 1;
-			posSubBlk2.Y = posMainBlk.Y;
+			posSubBlk2.Y = posMainBlk.Y - 1;
 			//3번 블록
-			posSubBlk3.X = posMainBlk.X + 1;
-			posSubBlk3.Y = posMainBlk.Y - 1;
+			posSubBlk3.X = posMainBlk.X;
+			posSubBlk3.Y = posMainBlk.Y + 1;
 			break; }
 		}
 		break;
@@ -259,26 +317,26 @@ void Blocks::PositionUpdate()
 		{
 		case 0: {
 			//1번 블록
-			posSubBlk1.X = posMainBlk.X + 1;
-			posSubBlk1.Y = posMainBlk.Y;
+			posSubBlk1.X = posMainBlk.X;
+			posSubBlk1.Y = posMainBlk.Y - 1;
 			//2번 블록
-			posSubBlk2.X = posMainBlk.X;
-			posSubBlk2.Y = posMainBlk.Y + 1;
+			posSubBlk2.X = posMainBlk.X + 1;
+			posSubBlk2.Y = posMainBlk.Y - 1;
 			//3번 블록
 			posSubBlk3.X = posMainBlk.X - 1;
-			posSubBlk3.Y = posMainBlk.Y + 1;
+			posSubBlk3.Y = posMainBlk.Y;
 			break; }
 
 		case 1: {
 			//1번 블록
-			posSubBlk1.X = posMainBlk.X;
-			posSubBlk1.Y = posMainBlk.Y + 1;
+			posSubBlk1.X = posMainBlk.X - 1;
+			posSubBlk1.Y = posMainBlk.Y;
 			//2번 블록
 			posSubBlk2.X = posMainBlk.X - 1;
-			posSubBlk2.Y = posMainBlk.Y;
+			posSubBlk2.Y = posMainBlk.Y - 1;
 			//3번 블록
-			posSubBlk3.X = posMainBlk.X - 1;
-			posSubBlk3.Y = posMainBlk.Y - 1;
+			posSubBlk3.X = posMainBlk.X;
+			posSubBlk3.Y = posMainBlk.Y + 1;
 			break; }
 		}
 		break;
@@ -286,32 +344,44 @@ void Blocks::PositionUpdate()
 
 }
 
-//방향이 음수면 왼쪽, 양수면 오른쪽, 0이면 아래쪽
-void Blocks::Move(short sDirection)
+//이동 (방향이 음수면 아래, 0이면 위, 1이면 왼쪽, 2이상이면 오른쪽)
+void Blocks::Move(const short& sDirection)
 {
-	//왼쪽 이동
-	if (sDirection < 0)
-	{
-		posMainBlk.X--;
-		PositionUpdate();
-	}
-	//오른쪽 이동
-	else if (sDirection > 0)
-	{
-		posMainBlk.X--;
-		PositionUpdate();
-	}
 	//아래로 이동
-	else
+	if (sDirection < 0)
 	{
 		posMainBlk.Y++;
 		PositionUpdate();
 	}
+	//위로 이동
+	else if (sDirection == 0)
+	{
+		posMainBlk.Y--;
+		PositionUpdate();
+	}
+	//왼쪽으로 이동
+	else if(sDirection == 1)
+	{
+		posMainBlk.X--;
+		PositionUpdate();
+	}
+	//오른쪽으로 이동
+	else
+	{
+		posMainBlk.X++;
+		PositionUpdate();
+	}
 }
 
-//회전
-void Blocks::Roate()
+//회전 (음수면 시계방향, 아니면 시계방향)
+void Blocks::Rotate(const short& sDirType)
 {
+	if (sDirType < 0)
+	{
+		//range : 0~4
+		sRotateCnt--;
+		if (sRotateCnt < 0) { sRotateCnt = 4; }
+	}
 	//range : 0~4
 	sRotateCnt = (sRotateCnt + 1) % 4;
 	PositionUpdate();

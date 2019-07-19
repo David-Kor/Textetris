@@ -61,7 +61,7 @@ void InitializeSgGm()
 
 	wstring* pwstrUI = g_GameBoard.GetUI();
 
-	//g_GameBoard.MoveBlock(0);
+	g_GameBoard.BlockDown(1);
 	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE);
 	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE, 26);
 	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE, 52);
@@ -160,8 +160,18 @@ int main()
 			case Input::DOWN:
 				ucSelected = MainMenuPrint(1);
 				break;
-			case Input::ENTER:
+			case Input::RIGHT:
+				g_GameBoard.BlockHorMove(1);
+				g_Renderer.UpdateBuffer(g_GameBoard.GetUI(), g_GameBoard.MAX_UI_LINE);
+				g_Renderer.Rendering();
+				break;
+			case Input::LEFT:
+				g_GameBoard.BlockHorMove(-1);
+				g_Renderer.UpdateBuffer(g_GameBoard.GetUI(), g_GameBoard.MAX_UI_LINE);
+				g_Renderer.Rendering();
+				break;
 			case Input::SPACE:
+			case Input::ENTER:
 				switch (ucSelected)
 				{
 				case SINGLE_GAME:

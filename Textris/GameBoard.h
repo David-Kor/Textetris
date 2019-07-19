@@ -10,12 +10,17 @@ private:
 
 	unsigned char mv_ucBoardTable[20][10];	//보드판 세로길이 x 보드판 가로길이
 	std::wstring mv_wstrUI[23];
+	Blocks* curBlk;		//현재 컨트롤 중인 블록
+	Blocks* nxtBlk;		//다음 나올 블록
 
-	Blocks* curBlk;
-	Blocks* nxtBlk;
+	const short OUT_OF_INDEX = -2;
+	const short CRASH_BLOCK = -1;
+	const short NULL_REFERENCE = 0;
+	const short SUCCESS = 1;
 
 	void CreateNextBlock();
-	void UpdateBoard();
+	short UpdateBlockToBoard();
+	void UpdateBoardToUI();
 
 public:
 	//보드판 세로길이
@@ -24,8 +29,6 @@ public:
 	const short MAX_HOR_SIZE = 10;
 	//전체 UI 라인 수
 	const short MAX_UI_LINE = 23;
-	//(삭제예정)보이지 않는 공간 수 -> 이 수보다 작은 Y값은 보드 화면상에 나타나지 않음
-	//const short MARGIN_BOARD = 2;
 
 	//생성자
 	GameBoard();
@@ -33,8 +36,9 @@ public:
 	~GameBoard();
 
 	std::wstring* GetUI();
-	void RotateBlock();
-	void MoveBlock(short sDirection);
+	void BlockRotate();
+	void BlockHorMove(short sDirection);
+	void BlockDown(int a);
 	void DropBlock();
 };
 
