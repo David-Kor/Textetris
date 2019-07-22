@@ -15,7 +15,7 @@ void Time::UpdateFPS(void (*Update)())
 	float fPrevTime = 0;	//한 프레임 실행 이전 시간 (T)
 	float fCurTime = clock() * 0.001f;	//한 프레임 실행 이후 시간 (T')
 	float time = 0;	//게임 내 경과 시간 (CPU 사정에 따라 실제 경과 시간과 다름)
-	float acc = 0;	//누산기용 변수
+	float acc = 0;	//누산용 변수
 	float fFrameTime;
 	float max = 0;
 
@@ -38,7 +38,7 @@ void Time::UpdateFPS(void (*Update)())
 			time += MY_DELTA_TIME;
 		}
 
-		//render
+		//rendering
 	}
 }
 

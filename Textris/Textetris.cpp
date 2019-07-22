@@ -15,6 +15,7 @@
 #define	MN_1_LINE		10
 #define	MN_2_LINE		12
 #define	MN_3_LINE		14
+#define	FPS	60		//초당 프레임 수
 
 using namespace std;
 
@@ -49,10 +50,13 @@ wstring g_wstrMainMenu[MAX_LINE] = {		//메인메뉴에 출력될 문자열
 /*24*/		L"",
 /*25*/		L""
 };
+bool g_isGameOver = false;
 
-//초기화
+//1인 게임 초기화
 void InitializeSgGm()
 {
+	g_isGameOver = false;
+
 	//출력버퍼 2개 초기화
 	g_Renderer.ResetBuffer();
 	g_Renderer.Rendering();
@@ -66,21 +70,97 @@ void InitializeSgGm()
 	g_Renderer.Rendering();
 }
 
-//게임 진행
+//1인 게임 진행
 void UpdateSgGm()
 {
+	if (g_Input.IsAnyKeyDown())
+	{
+		switch (g_Input.GetInputKey())
+		{
+		case Input::UP:
+			g_pGameBoard->BlockRotate();
+			break;
+		case Input::DOWN:
+			g_pGameBoard->BlockDown();
+			break;
+		case Input::LEFT:
+			g_pGameBoard->BlockHorMove(-1);
+			break;
+		case Input::RIGHT:
+			g_pGameBoard->BlockHorMove(1);
+			break;
+		case Input::SPACE:
+			g_pGameBoard->DropBlock();
+			break;
+		}
+	}
+
+	if (g_pGameBoard->isGameOver)
+	{
+		g_isGameOver = true;
+	}
 }
 
-//1인게임 main함수
+//1인 게임 출력
+void RenderSgGm()
+{
+	g_Renderer.UpdateBuffer(g_pGameBoard->GetUI(), g_pGameBoard->MAX_UI_LINE);
+	g_Renderer.Rendering();
+}
+
+//1인 게임 종료 작업
+void FinalizeSgGm()
+{
+	delete g_pGameBoard;
+	g_pGameBoard = nullptr;
+	g_isGameOver = false;
+}
+
+//1인 게임 main함수
 void SingleGameMain()
 {
+	float fPrevTime = 0;	//한 프레임 실행 이전 시간 (T)
+	float fCurTime = clock() * 0.001f;	//한 프레임 실행 이후 시간 (T')
+	float time = 0;		//게임 내 경과 시간 (CPU 사정에 따라 실제 경과 시간과 다름)
+	float acc = 0;		//누산용 변수
+	float fFrameTime;	//실제 ΔT (한 프레임 처리에 걸린 시간)
+	const float MAX_DELTA_TIME = 1.5f / FPS;	//최대 ΔT
+	const float DELTA_TIME = 1.0f / FPS;			//기본 ΔT (지정 프레임 시간)
+
+	//게임 초기화
 	InitializeSgGm();
 
-	if (g_pGameBoard != nullptr)
+	//프레임
+	while (true)
 	{
-		delete g_pGameBoard;
-		g_pGameBoard = nullptr;
+		fPrevTime = fCurTime;			//이전 시각 (T)
+		fCurTime = clock() * 0.001f;		//현재 시각 (T')
+		fFrameTime = fCurTime - fPrevTime;		//한 프레임당 걸린 시간 (ΔT = T' - T)
+
+		//최대 ΔT 제한
+		if (fFrameTime > MAX_DELTA_TIME)
+		{
+			fFrameTime = MAX_DELTA_TIME;
+		}
+		//누산 변수에 ΔT 저장
+		acc += fFrameTime;
+		
+		//지정한 기본 ΔT보다 오래 걸린 경우 지연시간을 포함하여 계산
+		while (acc >= DELTA_TIME)
+		{
+			UpdateSgGm();		//게임 데이터 갱신
+			acc -= DELTA_TIME;		//기본 ΔT만큼 빼서 지연시간을 누적 저장
+			time += DELTA_TIME;	//게임 내 경과시간
+		}
+
+		//출력
+		RenderSgGm();
+
+		if (g_isGameOver) { break; }
 	}
+
+	//게임 종료
+	FinalizeSgGm();
 }
 
 //문자열 내에 from 문자열을 찾아 to로 바꿈
@@ -145,9 +225,11 @@ unsigned char MainMenuPrint(const char cMoveDirect)
 	return ucSelected;
 }
 
-
+//메인 메뉴
 int main()
 {
+	//시드 변경
+	srand((unsigned int)time(NULL));
 	setlocale(LC_ALL, "");	//유니코드 문자열 출력을 위한 locale설정
 	unsigned char ucSelected = MainMenuPrint(0);
 	g_pGameBoard = nullptr;

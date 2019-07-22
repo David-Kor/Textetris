@@ -4,8 +4,6 @@
 //생성자
 Blocks::Blocks()
 {
-	//시드 변경
-	srand((unsigned int)time(NULL));
 	//랜덤 블록 타입
 	nBlockType = BlockType(rand() % 7);
 	mv_sRotateCnt = 0;

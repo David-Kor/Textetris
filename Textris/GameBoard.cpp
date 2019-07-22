@@ -8,27 +8,37 @@
 void GameBoard::CreateNextBlock()
 {
 	//현재 블록이 nullptr가 아니면 메모리에서 삭제
-	if (curBlk != nullptr) { delete curBlk; }
+	if (curBlk != nullptr)
+	{
+		delete curBlk;
+		curBlk = nullptr;
+	}
 
 	//다음 블록이 nullptr가 아니면 좌표를 갱신
-	if (nxtBlk != nullptr) { nxtBlk->PositionUpdate(); }
+	if (nxtBlk != nullptr)
+	{
+		nxtBlk->PositionUpdate();
+		curBlk = nxtBlk;	//다음 나올 블록을 현재 블록으로 지정
+	}
 
-	curBlk = nxtBlk;	//다음 나올 블록을 현재 블록으로 지정
+	if (UpdateBlockToBoard() == CRASH_BLOCK)
+	{
+		isGameOver = true;
+		return;
+	}
 	nxtBlk = new Blocks();	//다음 나올 새 블록 생성
 	nxtBlk->SetXPositionToCenter(MAX_HOR_SIZE);	//블록을 가운데에 배치
 }
 
 //curBlk의 좌표를 테이블에 적용 시도 후 결과 반환 -> 인덱스 벗어남(-2), 블록 곂침(-1), 널값 참조(0), 성공(1 이상)
-short GameBoard::UpdateBlockToBoard()
+int GameBoard::UpdateBlockToBoard()
 {
 	if (curBlk == nullptr) { return NULL_REFERENCE; }
 
-
 	//블록이 보드 밖으로 나가면 실패 반환
-	if (curBlk->posMainBlk.Y >= MAX_VER_SIZE || curBlk->posMainBlk.X < 0 || curBlk->posMainBlk.X >= MAX_HOR_SIZE ||
-		curBlk->posSubBlk1.Y >= MAX_VER_SIZE || curBlk->posSubBlk1.X < 0 || curBlk->posSubBlk1.X >= MAX_HOR_SIZE ||
-		curBlk->posSubBlk2.Y >= MAX_VER_SIZE || curBlk->posSubBlk2.X < 0 || curBlk->posSubBlk2.X >= MAX_HOR_SIZE ||
-		curBlk->posSubBlk3.Y >= MAX_VER_SIZE || curBlk->posSubBlk3.X < 0 || curBlk->posSubBlk3.X >= MAX_HOR_SIZE)
+	if (curBlk->GetMaxY() >= MAX_VER_SIZE ||
+		curBlk->GetMaxX() >= MAX_HOR_SIZE ||
+		curBlk->GetMinX() < 0)
 	{
 		return OUT_OF_INDEX;
 	}
@@ -77,6 +87,8 @@ short GameBoard::UpdateBlockToBoard()
 //테이블의 내용을 출력될 UI에 적용
 void GameBoard::UpdateBoardToUI()
 {
+	if (isGameOver) { return; }
+
 	int i, j;
 	for (i = 0; i < MAX_VER_SIZE; i++)
 	{
@@ -106,6 +118,8 @@ GameBoard::GameBoard()
 			mv_ucBoardTable[i][j] = 0;
 		}
 	}
+
+	mv_wstrUI = new std::wstring[MAX_UI_LINE];
 
 	//UI초기화
 	for (i = 0; i < MAX_UI_LINE; i++)
@@ -154,8 +168,18 @@ GameBoard::GameBoard()
 //소멸자
 GameBoard::~GameBoard()
 {
-	delete curBlk;
-	delete nxtBlk;
+	delete[] mv_wstrUI;
+	mv_wstrUI = nullptr;
+	if (nxtBlk != nullptr)
+	{
+		delete nxtBlk;
+		nxtBlk = nullptr;
+	}
+	if (curBlk != nullptr)
+	{
+		delete curBlk;
+		curBlk = nullptr;
+	}
 }
 
 std::wstring * GameBoard::GetUI()
@@ -187,7 +211,7 @@ void GameBoard::BlockRotate()
 }
 
 //방향이 음수면 왼쪽, 아니면 오른쪽 이동
-void GameBoard::BlockHorMove(short sDirection)
+void GameBoard::BlockHorMove(int sDirection)
 {
 	if (curBlk == nullptr) { return; }
 
@@ -229,7 +253,7 @@ void GameBoard::BlockDown()
 {
 	if (curBlk == nullptr) { return; }
 
-	short sResult;
+	int sResult;
 	//테이블에서 이동하기 전의 자리들을 0으로 초기화
 	mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0;
 	mv_ucBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0;
@@ -243,6 +267,7 @@ void GameBoard::BlockDown()
 	if (sResult <= 0)
 	{
 		curBlk->Move(0);
+		UpdateBlockToBoard();
 		//null값 참조에 의한 실패가 아닌 경우(블록이 더이상 내려갈 수 없는 경우)
 		if (sResult != NULL_REFERENCE)
 		{
@@ -254,7 +279,6 @@ void GameBoard::BlockDown()
 			//새 블록 생성
 			CreateNextBlock();
 		}
-		UpdateBlockToBoard();
 	}
 	//출력 UI에 적용
 	UpdateBoardToUI();
@@ -265,9 +289,9 @@ void GameBoard::DropBlock()
 {
 	if (curBlk == nullptr) { return; }
 
-	short sResult = 0;
+	int sResult = SUCCESS;
 	
-	while (sResult != SUCCESS)
+	while (sResult == SUCCESS)
 	{
 		//테이블에서 이동하기 전의 자리들을 0으로 초기화
 		mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0;
@@ -282,6 +306,7 @@ void GameBoard::DropBlock()
 		if (sResult != SUCCESS)
 		{
 			curBlk->Move(0);
+			UpdateBlockToBoard();
 			//null값 참조에 의한 실패가 아닌 경우(블록이 더이상 내려갈 수 없는 경우)
 			if (sResult != NULL_REFERENCE)
 			{
@@ -293,7 +318,6 @@ void GameBoard::DropBlock()
 				//새 블록 생성
 				CreateNextBlock();
 			}
-			UpdateBlockToBoard();
 		}
 	}
 	//출력 UI에 적용

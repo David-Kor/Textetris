@@ -38,11 +38,11 @@ Input::KeyList Input::GetInputKey()
 		default:
 			return KeyList::ANOTHER;
 		}
-	case 32:		//Enter
-		return KeyList::ENTER;
-
-	case 13:		//Space
+	case 32:		//Space
 		return KeyList::SPACE;
+
+	case 13:		//Enter
+		return KeyList::ENTER;
 
 	default:
 		return KeyList::ANOTHER;
