@@ -1,4 +1,4 @@
-﻿/*	프로젝트	: Textris(텍스트리스) -> 텍스트 + 테트리스
+﻿/*	프로젝트	: Textris(텍스트리스) -> 텍스트 + 테트리스  /// (19.07.22) 이름 변경 : Textetris(텍스테트리스)
  *	제작자	: 백다윗
  *	개발시작	: 2019.07.03
  *	개발환경	: VisualStudio Community 2017 -> (19.07.16) VisualStudio Community 2019로 변경
@@ -21,7 +21,7 @@ using namespace std;
 //전역 변수들
 Input g_Input;	//키 입력 담당 클래스
 Renderer g_Renderer(MAX_WORD, MAX_LINE);		//콘솔화면 출력 담당 클래스
-GameBoard g_GameBoard;
+GameBoard* g_pGameBoard;
 wstring g_wstrMainMenu[MAX_LINE] = {		//메인메뉴에 출력될 문자열
 /*1*/		L"　　　　■■■ ■■■ ■　　　■ ■■■ ■■■　 ■■■  ■■■",
 /*2*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 ■",
@@ -58,8 +58,11 @@ void InitializeSgGm()
 	g_Renderer.Rendering();
 	g_Renderer.ResetBuffer();
 
-	wstring* pwstrUI = g_GameBoard.GetUI();
-	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE);
+	//전역 포인터 변수 초기화
+	g_pGameBoard = new GameBoard();
+	//초기 화면 출력
+	wstring* pwstrUI = g_pGameBoard->GetUI();
+	g_Renderer.UpdateBuffer(pwstrUI, g_pGameBoard->MAX_UI_LINE);
 	g_Renderer.Rendering();
 }
 
@@ -72,6 +75,12 @@ void UpdateSgGm()
 void SingleGameMain()
 {
 	InitializeSgGm();
+
+	if (g_pGameBoard != nullptr)
+	{
+		delete g_pGameBoard;
+		g_pGameBoard = nullptr;
+	}
 }
 
 //문자열 내에 from 문자열을 찾아 to로 바꿈
@@ -141,6 +150,7 @@ int main()
 {
 	setlocale(LC_ALL, "");	//유니코드 문자열 출력을 위한 locale설정
 	unsigned char ucSelected = MainMenuPrint(0);
+	g_pGameBoard = nullptr;
 
 	while (true)
 	{
