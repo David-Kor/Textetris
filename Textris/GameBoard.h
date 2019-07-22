@@ -38,7 +38,7 @@ public:
 	std::wstring* GetUI();
 	void BlockRotate();
 	void BlockHorMove(short sDirection);
-	void BlockDown(int a);
+	void BlockDown();
 	void DropBlock();
 };
 

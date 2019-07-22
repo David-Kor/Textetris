@@ -49,22 +49,17 @@ wstring g_wstrMainMenu[MAX_LINE] = {		//메인메뉴에 출력될 문자열
 /*24*/		L"",
 /*25*/		L""
 };
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //초기화
 void InitializeSgGm()
 {
-	//출력버퍼 초기화
+	//출력버퍼 2개 초기화
 	g_Renderer.ResetBuffer();
 	g_Renderer.Rendering();
 	g_Renderer.ResetBuffer();
 
 	wstring* pwstrUI = g_GameBoard.GetUI();
-
-	g_GameBoard.BlockDown(1);
 	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE);
-	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE, 26);
-	g_Renderer.UpdateBuffer(pwstrUI, g_GameBoard.MAX_UI_LINE, 52);
 	g_Renderer.Rendering();
 }
 
@@ -90,7 +85,6 @@ wstring* ReplaceFirstString(wstring* str, const wstring &from, const wstring &to
 	}
 	return str;
 }
-
 
 //메인 화면 출력
 unsigned char MainMenuPrint(const char cMoveDirect)
@@ -159,16 +153,6 @@ int main()
 				break;
 			case Input::DOWN:
 				ucSelected = MainMenuPrint(1);
-				break;
-			case Input::RIGHT:
-				g_GameBoard.BlockHorMove(1);
-				g_Renderer.UpdateBuffer(g_GameBoard.GetUI(), g_GameBoard.MAX_UI_LINE);
-				g_Renderer.Rendering();
-				break;
-			case Input::LEFT:
-				g_GameBoard.BlockHorMove(-1);
-				g_Renderer.UpdateBuffer(g_GameBoard.GetUI(), g_GameBoard.MAX_UI_LINE);
-				g_Renderer.Rendering();
 				break;
 			case Input::SPACE:
 			case Input::ENTER:

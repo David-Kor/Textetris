@@ -1,6 +1,5 @@
 #ifndef _RENDERER_CLASS
 #define _RENDERER_CLASS
-#include <Windows.h>
 
 class Renderer
 {

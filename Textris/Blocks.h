@@ -10,11 +10,11 @@ private:
 		short Y;
 	};
 
-	short sRotateCnt;
+	short mv_sRotateCnt;
 
 public:
 	enum BlockType { I, O, T, L, J, Z, S };
-	BlockType type;
+	BlockType nBlockType;
 	Position posMainBlk;
 	Position posSubBlk1;
 	Position posSubBlk2;

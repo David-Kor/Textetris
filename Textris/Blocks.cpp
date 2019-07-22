@@ -7,8 +7,8 @@ Blocks::Blocks()
 	//시드 변경
 	srand((unsigned int)time(NULL));
 	//랜덤 블록 타입
-	type = BlockType(rand() % 7);
-	sRotateCnt = 0;
+	nBlockType = BlockType(rand() % 7);
+	mv_sRotateCnt = 0;
 	posMainBlk.X = 0;
 	posMainBlk.Y = 0;
 }
@@ -21,7 +21,7 @@ Blocks::~Blocks()
 //블록 전체가 X축 가운데에 오도록 배치
 void Blocks::SetXPositionToCenter(const short sMaxHorSize)
 {
-	switch (type)
+	switch (nBlockType)
 	{
 	case BlockType::I:
 	case BlockType::O:
@@ -74,11 +74,11 @@ void Blocks::SetXPositionToCenter(const short sMaxHorSize)
 //MainBlk을 기준으로 SubBlk들의 좌표를 설정
 void Blocks::PositionUpdate()
 {
-	switch (type)
+	switch (nBlockType)
 	{
 		//ㅣ자형 블록
 	case BlockType::I:
-		switch (sRotateCnt % 2)	//회전 가능 모양이 2개만 존재
+		switch (mv_sRotateCnt % 2)	//회전 가능 모양이 2개만 존재
 		{
 		case 0: {
 			//1번 블록
@@ -94,8 +94,8 @@ void Blocks::PositionUpdate()
 
 		case 1: {
 			//1번 블록
-			posSubBlk3.X = posMainBlk.X;
-			posSubBlk3.Y = posMainBlk.Y + 1;
+			posSubBlk1.X = posMainBlk.X;
+			posSubBlk1.Y = posMainBlk.Y + 1;
 			//2번 블록
 			posSubBlk2.X = posMainBlk.X;
 			posSubBlk2.Y = posMainBlk.Y - 1;
@@ -115,13 +115,13 @@ void Blocks::PositionUpdate()
 		posSubBlk2.X = posMainBlk.X;
 		posSubBlk2.Y = posMainBlk.Y - 1;
 		//3번 블록
-		posSubBlk2.X = posMainBlk.X - 1;
-		posSubBlk2.Y = posMainBlk.Y;
+		posSubBlk3.X = posMainBlk.X - 1;
+		posSubBlk3.Y = posMainBlk.Y;
 		break;
 
 		//ㅗ자형 블록
 	case BlockType::T:
-		switch (sRotateCnt)
+		switch (mv_sRotateCnt)
 		{
 		case 0: {
 			//1번 블록
@@ -156,7 +156,7 @@ void Blocks::PositionUpdate()
 			posSubBlk2.Y = posMainBlk.Y;
 			//3번 블록
 			posSubBlk3.X = posMainBlk.X;
-			posSubBlk3.Y = posMainBlk.Y - 1;
+			posSubBlk3.Y = posMainBlk.Y + 1;
 			break; }
 
 		case 3: {
@@ -175,7 +175,7 @@ void Blocks::PositionUpdate()
 
 		//ㄴ자형 블록
 	case BlockType::L:
-		switch (sRotateCnt)
+		switch (mv_sRotateCnt)
 		{
 		case 0: {
 			//1번 블록
@@ -229,7 +229,7 @@ void Blocks::PositionUpdate()
 
 		//ㄱ자형 블록
 	case BlockType::J:
-		switch (sRotateCnt)
+		switch (mv_sRotateCnt)
 		{
 		case 0: {
 			//1번 블록
@@ -246,12 +246,12 @@ void Blocks::PositionUpdate()
 		case 1: {
 			//1번 블록
 			posSubBlk1.X = posMainBlk.X;
-			posSubBlk1.Y = posMainBlk.Y + 1;
+			posSubBlk1.Y = posMainBlk.Y - 1;
 			//2번 블록
 			posSubBlk2.X = posMainBlk.X;
-			posSubBlk2.Y = posMainBlk.Y + 2;
+			posSubBlk2.Y = posMainBlk.Y - 2;
 			//3번 블록
-			posSubBlk3.X = posMainBlk.X + 1;
+			posSubBlk3.X = posMainBlk.X - 1;
 			posSubBlk3.Y = posMainBlk.Y;
 			break; }
 
@@ -270,12 +270,12 @@ void Blocks::PositionUpdate()
 		case 3: {
 			//1번 블록
 			posSubBlk1.X = posMainBlk.X;
-			posSubBlk1.Y = posMainBlk.Y - 1;
+			posSubBlk1.Y = posMainBlk.Y + 1;
 			//2번 블록
 			posSubBlk2.X = posMainBlk.X;
-			posSubBlk2.Y = posMainBlk.Y - 2;
+			posSubBlk2.Y = posMainBlk.Y + 2;
 			//3번 블록
-			posSubBlk3.X = posMainBlk.X - 1;
+			posSubBlk3.X = posMainBlk.X + 1;
 			posSubBlk3.Y = posMainBlk.Y;
 			break; }
 		}
@@ -283,7 +283,7 @@ void Blocks::PositionUpdate()
 
 		//ㄹ자형 블록
 	case BlockType::Z:
-		switch (sRotateCnt % 2)		//회전 가능 모양이 2개만 존재
+		switch (mv_sRotateCnt % 2)		//회전 가능 모양이 2개만 존재
 		{
 		case 0: {
 			//1번 블록
@@ -313,7 +313,7 @@ void Blocks::PositionUpdate()
 
 		//5 자형 블록
 	case BlockType::S:
-		switch (sRotateCnt % 2)		//회전 가능 모양이 2개만 존재
+		switch (mv_sRotateCnt % 2)		//회전 가능 모양이 2개만 존재
 		{
 		case 0: {
 			//1번 블록
@@ -379,11 +379,14 @@ void Blocks::Rotate(const short& sDirType)
 	if (sDirType < 0)
 	{
 		//range : 0~4
-		sRotateCnt--;
-		if (sRotateCnt < 0) { sRotateCnt = 4; }
+		if (mv_sRotateCnt > 0) { mv_sRotateCnt--; }
+		else { mv_sRotateCnt = 4; }
 	}
-	//range : 0~4
-	sRotateCnt = (sRotateCnt + 1) % 4;
+	else
+	{
+		//range : 0~4
+		mv_sRotateCnt = (mv_sRotateCnt + 1) % 4;
+	}
 	PositionUpdate();
 }
 

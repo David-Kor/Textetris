@@ -1,6 +1,5 @@
 #ifndef _INPUT_CLASS
 #define _INPUT_CLASS
-#include <conio.h>
 
 class Input
 {
