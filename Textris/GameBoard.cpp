@@ -7,25 +7,28 @@
 //새 블록을 생성하며 다음 블록을 컨트롤하게 함
 void GameBoard::CreateNextBlock()
 {
+	if (isGameOver) { return; }
+
 	//현재 블록이 nullptr가 아니면 메모리에서 삭제
 	if (curBlk != nullptr)
 	{
 		delete curBlk;
 		curBlk = nullptr;
 	}
-
-	//다음 블록이 nullptr가 아니면 좌표를 갱신
+	//다음 블록이 nullptr가 아니면 좌표를 갱신 후 현재 블록으로 지정
 	if (nxtBlk != nullptr)
 	{
 		nxtBlk->PositionUpdate();
 		curBlk = nxtBlk;	//다음 나올 블록을 현재 블록으로 지정
+		nxtBlk = nullptr;
+		//블록 갱신에 실패하면 게임 종료
+		if (UpdateBlockToBoard() != SUCCESS)
+		{
+			isGameOver = true;
+			return;
+		}
 	}
 
-	if (UpdateBlockToBoard() == CRASH_BLOCK)
-	{
-		isGameOver = true;
-		return;
-	}
 	nxtBlk = new Blocks();	//다음 나올 새 블록 생성
 	nxtBlk->SetXPositionToCenter(MAX_HOR_SIZE);	//블록을 가운데에 배치
 }
@@ -47,38 +50,26 @@ int GameBoard::UpdateBlockToBoard()
 	//Y좌표가 보드 내에 있는 블록만 충돌검사
 	if (curBlk->posMainBlk.Y >= 0)
 	{
-		if (mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] != 0) { return CRASH_BLOCK; }
+		if (mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] != 0) { return CRASH_BLOCK; }
 	}
 	if (curBlk->posSubBlk1.Y >= 0)
 	{
-		if (mv_ucBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] != 0) { return CRASH_BLOCK; }
+		if (mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] != 0) { return CRASH_BLOCK; }
 	}
 	if (curBlk->posSubBlk2.Y >= 0)
 	{
-		if (mv_ucBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] != 0) { return CRASH_BLOCK; }
+		if (mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] != 0) { return CRASH_BLOCK; }
 	}
 	if (curBlk->posSubBlk3.Y >= 0)
 	{
-		if (mv_ucBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] != 0) { return CRASH_BLOCK; }
+		if (mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] != 0) { return CRASH_BLOCK; }
 	}
 
 	//게임 보드보다 위쪽의 좌표(Y < 0)는 무시
-	if (curBlk->posMainBlk.Y >= 0)
-	{
-		mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 1;
-	}
-	if (curBlk->posSubBlk1.Y >= 0)
-	{
-		mv_ucBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 1;
-	}
-	if (curBlk->posSubBlk2.Y >= 0)
-	{
-		mv_ucBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 1;
-	}
-	if (curBlk->posSubBlk3.Y >= 0)
-	{
-		mv_ucBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 1;
-	}
+	if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 1; }
+	if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 1; }
+	if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 1; }
+	if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 1; }
 
 	//성공 반환
 	return SUCCESS;
@@ -95,7 +86,7 @@ void GameBoard::UpdateBoardToUI()
 		for (j = 0; j < MAX_HOR_SIZE; j++)
 		{
 			//테이블 값이 0이면 빈 칸
-			if (mv_ucBoardTable[i][j] == 0) { mv_wstrUI[i][j + 1] = EMPTY; }
+			if (mv_unBoardTable[i][j] == 0) { mv_wstrUI[i][j + 1] = EMPTY; }
 			//0이 아니면 블록(■)
 			else { mv_wstrUI[i][j + 1] = BLOCK; }
 		}
@@ -115,11 +106,9 @@ GameBoard::GameBoard()
 	{
 		for (j = 0; j < MAX_HOR_SIZE; j++)
 		{
-			mv_ucBoardTable[i][j] = 0;
+			mv_unBoardTable[i][j] = 0;
 		}
 	}
-
-	mv_wstrUI = new std::wstring[MAX_UI_LINE];
 
 	//UI초기화
 	for (i = 0; i < MAX_UI_LINE; i++)
@@ -168,18 +157,10 @@ GameBoard::GameBoard()
 //소멸자
 GameBoard::~GameBoard()
 {
-	delete[] mv_wstrUI;
-	mv_wstrUI = nullptr;
-	if (nxtBlk != nullptr)
-	{
-		delete nxtBlk;
-		nxtBlk = nullptr;
-	}
-	if (curBlk != nullptr)
-	{
-		delete curBlk;
-		curBlk = nullptr;
-	}
+	delete curBlk;
+	delete nxtBlk;
+	curBlk = nullptr;
+	nxtBlk = nullptr;
 }
 
 std::wstring * GameBoard::GetUI()
@@ -190,13 +171,13 @@ std::wstring * GameBoard::GetUI()
 //블록 회전
 void GameBoard::BlockRotate()
 {
-	if (curBlk == nullptr) { return; }
+	if (curBlk == nullptr || isGameOver) { return; }
 	
 	//테이블에서 회전하기 전의 자리들을 0으로 초기화
-	mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0;
-	mv_ucBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0;
-	mv_ucBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 0;
-	mv_ucBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 0;
+	if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0; }
+	if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0; }
+	if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 0; }
+	if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 0; }
 	//회전
 	curBlk->Rotate(1);
 	//적용 시도
@@ -211,17 +192,17 @@ void GameBoard::BlockRotate()
 }
 
 //방향이 음수면 왼쪽, 아니면 오른쪽 이동
-void GameBoard::BlockHorMove(int sDirection)
+void GameBoard::BlockHorMove(int nDirection)
 {
-	if (curBlk == nullptr) { return; }
+	if (curBlk == nullptr || isGameOver) { return; }
 
 	//테이블에서 이동하기 전의 자리들을 0으로 초기화
-	mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0;
-	mv_ucBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0;
-	mv_ucBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 0;
-	mv_ucBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 0;
+	if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0; }
+	if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0; }
+	if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 0; }
+	if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 0; }
 	//왼쪽 이동
-	if (sDirection < 0)
+	if (nDirection < 0)
 	{
 		curBlk->Move(1);
 		//적용 시도
@@ -251,14 +232,14 @@ void GameBoard::BlockHorMove(int sDirection)
 //블록을 한 칸 아래로 내림
 void GameBoard::BlockDown()
 {
-	if (curBlk == nullptr) { return; }
+	if (curBlk == nullptr || isGameOver) { return; }
 
 	int sResult;
 	//테이블에서 이동하기 전의 자리들을 0으로 초기화
-	mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0;
-	mv_ucBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0;
-	mv_ucBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 0;
-	mv_ucBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 0;
+	if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0; }
+	if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0; }
+	if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 0; }
+	if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 0; }
 	//한 칸 아래로 이동
 	curBlk->Move(-1);
 	//적용 시도
@@ -272,10 +253,10 @@ void GameBoard::BlockDown()
 		if (sResult != NULL_REFERENCE)
 		{
 			//블록들의 좌표에 고정 블록값(2)을 적용
-			mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 2;
-			mv_ucBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 2;
-			mv_ucBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 2;
-			mv_ucBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 2;
+			if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 2; }
+			if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 2; }
+			if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 2; }
+			if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 2; }
 			//새 블록 생성
 			CreateNextBlock();
 		}
@@ -287,17 +268,17 @@ void GameBoard::BlockDown()
 //블록을 맨 밑까지 한번에 내림
 void GameBoard::DropBlock()
 {
-	if (curBlk == nullptr) { return; }
+	if (curBlk == nullptr || isGameOver) { return; }
 
 	int sResult = SUCCESS;
 	
 	while (sResult == SUCCESS)
 	{
 		//테이블에서 이동하기 전의 자리들을 0으로 초기화
-		mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0;
-		mv_ucBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0;
-		mv_ucBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 0;
-		mv_ucBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 0;
+		if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0; }
+		if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0; }
+		if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 0; }
+		if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 0; }
 		//한 칸 아래로 이동
 		curBlk->Move(-1);
 		//적용 시도
@@ -311,10 +292,10 @@ void GameBoard::DropBlock()
 			if (sResult != NULL_REFERENCE)
 			{
 				//블록들의 좌표에 고정 블록값(2)을 적용
-				mv_ucBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 2;
-				mv_ucBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 2;
-				mv_ucBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 2;
-				mv_ucBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 2;
+				if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 2; }
+				if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 2; }
+				if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 2; }
+				if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 2; }
 				//새 블록 생성
 				CreateNextBlock();
 			}

@@ -8,8 +8,8 @@ class GameBoard
 private:
 	enum BoardType { BLOCK = L'■', EMPTY = L'　', WALL = L'▣' };
 
-	unsigned char mv_ucBoardTable[20][10];	//보드판 세로길이 x 보드판 가로길이
-	std::wstring* mv_wstrUI;
+	unsigned int mv_unBoardTable[20][10];	//보드판 세로길이 x 보드판 가로길이
+	std::wstring mv_wstrUI[23];	//UI 텍스트
 	Blocks* curBlk;		//현재 컨트롤 중인 블록
 	Blocks* nxtBlk;		//다음 나올 블록
 
@@ -38,7 +38,7 @@ public:
 
 	std::wstring* GetUI();
 	void BlockRotate();
-	void BlockHorMove(int sDirection);
+	void BlockHorMove(int nDirection);
 	void BlockDown();
 	void DropBlock();
 };

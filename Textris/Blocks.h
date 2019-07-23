@@ -4,17 +4,17 @@
 class Blocks
 {
 private:
+	enum BlockType { I, O, T, L, J, Z, S };
 	struct Position
 	{
-		short X;
-		short Y;
+		int X;
+		int Y;
 	};
 
-	short mv_sRotateCnt;
+	BlockType nBlockType;
+	int mv_nRotateCnt;
 
 public:
-	enum BlockType { I, O, T, L, J, Z, S };
-	BlockType nBlockType;
 	Position posMainBlk;
 	Position posSubBlk1;
 	Position posSubBlk2;
@@ -23,13 +23,13 @@ public:
 	Blocks();
 	~Blocks();
 
-	void SetXPositionToCenter(const short sMaxHorSize);
+	void SetXPositionToCenter(const int& nMaxHorSize);
 	void PositionUpdate();
-	void Move(const short& sDirType);
-	void Rotate(const short& sDirection);
-	short GetMinX();
-	short GetMaxX();
-	short GetMaxY();
+	void Move(const int& nDirType);
+	void Rotate(const int& nDirection);
+	int GetMinX();
+	int GetMaxX();
+	int GetMaxY();
 };
 
 #endif

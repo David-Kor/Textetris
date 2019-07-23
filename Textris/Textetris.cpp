@@ -22,8 +22,9 @@ using namespace std;
 //전역 변수들
 Input g_Input;	//키 입력 담당 클래스
 Renderer g_Renderer(MAX_WORD, MAX_LINE);		//콘솔화면 출력 담당 클래스
-GameBoard* g_pGameBoard;
-wstring g_wstrMainMenu[MAX_LINE] = {		//메인메뉴에 출력될 문자열
+GameBoard* g_pGameBoard = nullptr;			//게임 데이터 담당 클래스
+wstring g_wstrMainMenu[MAX_LINE] =		//메인메뉴에 출력될 문자열
+{
 /*1*/		L"　　　　■■■ ■■■ ■　　　■ ■■■ ■■■　 ■■■  ■■■",
 /*2*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 ■",
 /*3*/		L"　　　　　■　 ■■■ 　　■　　 　■　 ■■■　 　■　  ■■■",
@@ -50,7 +51,55 @@ wstring g_wstrMainMenu[MAX_LINE] = {		//메인메뉴에 출력될 문자열
 /*24*/		L"",
 /*25*/		L""
 };
-bool g_isGameOver = false;
+bool g_isGameOver = false;		//게임 종료 여부
+
+//함수 들
+void InitializeSgGm();		//1인 게임 초기화
+void UpdateSgGm();		//1인 게임 진행
+void RenderSgGm();		//1인 게임 출력
+void FinalizeSgGm();		//1인 게임 종료 작업
+void SingleGameMain();	//1인 게임 main
+wstring* ReplaceFirstString(wstring* str, const wstring& from, const wstring& to);		//문자열 검색 및 치환
+unsigned int MainMenuPrint(const int nMoveDirect);		//메인 화면 출력
+
+//메인 메뉴
+int main()
+{
+	//시드 변경
+	srand((unsigned int)time(NULL));
+	setlocale(LC_ALL, "");	//유니코드 문자열 출력을 위한 locale설정
+	unsigned int uiSelected = MainMenuPrint(0);
+
+	while (true)
+	{
+		if (g_Input.IsAnyKeyDown())
+		{
+			switch (g_Input.GetInputKey())
+			{
+			case Input::UP:
+				uiSelected = MainMenuPrint(-1);
+				break;
+			case Input::DOWN:
+				uiSelected = MainMenuPrint(1);
+				break;
+			case Input::ENTER:
+				switch (uiSelected)
+				{
+				case SINGLE_GAME:
+					SingleGameMain();
+					break;
+				case MULTI_GAME:
+					break;
+				case QUIT_GAME:	//종료
+					return 0;
+				}
+				break;
+			}
+		}
+	}
+
+	return -1;
+}
 
 //1인 게임 초기화
 void InitializeSgGm()
@@ -111,16 +160,22 @@ void RenderSgGm()
 //1인 게임 종료 작업
 void FinalizeSgGm()
 {
+	//게임 보드 메모리 할당 해제
 	delete g_pGameBoard;
 	g_pGameBoard = nullptr;
 	g_isGameOver = false;
+	//출력 버퍼 초기화
+	g_Renderer.ResetBuffer();
+	g_Renderer.Rendering();
+	g_Renderer.ResetBuffer();
+	MainMenuPrint(0);
 }
 
-//1인 게임 main함수
+//1인 게임 main
 void SingleGameMain()
 {
 	float fPrevTime = 0;	//한 프레임 실행 이전 시간 (T)
-	float fCurTime = clock() * 0.001f;	//한 프레임 실행 이후 시간 (T')
+	float fCurTime = clock() * 0.001f;	//한 프레임 실행 이후 시간 (T')	 [ 단위 : 초(s) ]
 	float time = 0;		//게임 내 경과 시간 (CPU 사정에 따라 실제 경과 시간과 다름)
 	float acc = 0;		//누산용 변수
 	float fFrameTime;	//실제 ΔT (한 프레임 처리에 걸린 시간)
@@ -163,7 +218,7 @@ void SingleGameMain()
 	FinalizeSgGm();
 }
 
-//문자열 내에 from 문자열을 찾아 to로 바꿈
+//str 문자열 내에 from 문자열을 찾아 to로 바꿈
 wstring* ReplaceFirstString(wstring* str, const wstring &from, const wstring &to)
 {
 	size_t szPos = 0;
@@ -176,9 +231,9 @@ wstring* ReplaceFirstString(wstring* str, const wstring &from, const wstring &to
 }
 
 //메인 화면 출력
-unsigned char MainMenuPrint(const char cMoveDirect)
+unsigned int MainMenuPrint(const int nMoveDirect)
 {
-	static unsigned char ucSelected = 1;
+	static unsigned int uiSelected = 1;
 
 	static wstring strMnSingle = L"■　　　▷　1.　혼자하기　　　　　　　　　　　　　　　　　　　　　　　■\n";
 	static wstring strMnMulti = L"■　　　▷　2.　같이하기　　　　　　　　　　　　　　　　　　　　　　　■\n";
@@ -189,13 +244,13 @@ unsigned char MainMenuPrint(const char cMoveDirect)
 	static const wstring strSelected = L"▶";		//선택된 메뉴 표시
 
 	//범위 제한
-	ucSelected += cMoveDirect;
-	if (ucSelected == 0) { ucSelected = 3; }
-	else if (ucSelected == 4) { ucSelected = 1; }
+	uiSelected += nMoveDirect;
+	if (uiSelected == 0) { uiSelected = 3; }
+	else if (uiSelected == 4) { uiSelected = 1; }
 
 	//현재 선택한 메뉴 : ▶ 표시
 	//나머지 메뉴 : ▷ 표시
-	switch (ucSelected)
+	switch (uiSelected)
 	{
 	case 1:
 		ReplaceFirstString(&strMnSingle, strNoSelected, strSelected);
@@ -222,46 +277,5 @@ unsigned char MainMenuPrint(const char cMoveDirect)
 	g_Renderer.UpdateBuffer(g_wstrMainMenu, MAX_LINE);
 	g_Renderer.Rendering();
 
-	return ucSelected;
-}
-
-//메인 메뉴
-int main()
-{
-	//시드 변경
-	srand((unsigned int)time(NULL));
-	setlocale(LC_ALL, "");	//유니코드 문자열 출력을 위한 locale설정
-	unsigned char ucSelected = MainMenuPrint(0);
-	g_pGameBoard = nullptr;
-
-	while (true)
-	{
-		if (g_Input.IsAnyKeyDown())
-		{
-			switch (g_Input.GetInputKey())
-			{
-			case Input::UP:
-				ucSelected = MainMenuPrint(-1);
-				break;
-			case Input::DOWN:
-				ucSelected = MainMenuPrint(1);
-				break;
-			case Input::SPACE:
-			case Input::ENTER:
-				switch (ucSelected)
-				{
-				case SINGLE_GAME:
-					SingleGameMain();
-					break;
-				case MULTI_GAME:
-					break;
-				case QUIT_GAME:	//종료
-					return 0;
-				}
-				break;
-			}
-		}
-	}
-
-	return -1;
+	return uiSelected;
 }
