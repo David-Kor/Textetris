@@ -377,8 +377,8 @@ void Blocks::Rotate(const int& nDirType)
 	if (nDirType < 0)
 	{
 		//range : 0~4
-		if (mv_nRotateCnt > 0) { mv_nRotateCnt--; }
-		else { mv_nRotateCnt = 4; }
+		mv_nRotateCnt--;
+		if (mv_nRotateCnt < 0) { mv_nRotateCnt = 3; }
 	}
 	else
 	{
