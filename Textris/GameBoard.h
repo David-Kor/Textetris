@@ -18,9 +18,11 @@ private:
 	const int NULL_REFERENCE = 0;
 	const int SUCCESS = 1;
 
-	void CreateNextBlock();
-	int UpdateBlockToBoard();
-	void UpdateBoardToUI();
+	void v_CreateNextBlock();
+	int v_UpdateBlockToBoard();
+	void v_UpdateBoardToUI();
+	void v_CheckFullLine();
+	void v_DeleteLine(int nLine, int nCount);
 
 public:
 	//보드판 세로길이
@@ -29,7 +31,7 @@ public:
 	const int MAX_HOR_SIZE = 10;
 	//전체 UI 라인 수
 	const int MAX_UI_LINE = 23;
-	bool isGameOver;
+	bool m_isGameOver;
 
 	//생성자
 	GameBoard();

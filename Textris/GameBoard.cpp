@@ -5,9 +5,9 @@
 /* private 함수 */
 
 //새 블록을 생성하며 다음 블록을 컨트롤하게 함
-void GameBoard::CreateNextBlock()
+void GameBoard::v_CreateNextBlock()
 {
-	if (isGameOver) { return; }
+	if (m_isGameOver) { return; }
 
 	//현재 블록이 nullptr가 아니면 메모리에서 삭제
 	if (curBlk != nullptr)
@@ -22,9 +22,9 @@ void GameBoard::CreateNextBlock()
 		curBlk = nxtBlk;	//다음 나올 블록을 현재 블록으로 지정
 		nxtBlk = nullptr;
 		//블록 갱신에 실패하면 게임 종료
-		if (UpdateBlockToBoard() != SUCCESS)
+		if (v_UpdateBlockToBoard() != SUCCESS)
 		{
-			isGameOver = true;
+			m_isGameOver = true;
 			return;
 		}
 	}
@@ -34,7 +34,7 @@ void GameBoard::CreateNextBlock()
 }
 
 //curBlk의 좌표를 테이블에 적용 시도 후 결과 반환 -> 인덱스 벗어남(-2), 블록 곂침(-1), 널값 참조(0), 성공(1 이상)
-int GameBoard::UpdateBlockToBoard()
+int GameBoard::v_UpdateBlockToBoard()
 {
 	if (curBlk == nullptr) { return NULL_REFERENCE; }
 
@@ -76,9 +76,9 @@ int GameBoard::UpdateBlockToBoard()
 }
 
 //테이블의 내용을 출력될 UI에 적용
-void GameBoard::UpdateBoardToUI()
+void GameBoard::v_UpdateBoardToUI()
 {
-	if (isGameOver) { return; }
+	if (m_isGameOver) { return; }
 
 	int i, j;
 	for (i = 0; i < MAX_VER_SIZE; i++)
@@ -89,6 +89,62 @@ void GameBoard::UpdateBoardToUI()
 			if (mv_unBoardTable[i][j] == 0) { mv_wstrUI[i][j + 1] = EMPTY; }
 			//0이 아니면 블록(■)
 			else { mv_wstrUI[i][j + 1] = BLOCK; }
+		}
+	}
+}
+
+//가득찬 라인을 검사하여 제거
+void GameBoard::v_CheckFullLine()
+{
+	int i, j;
+	int nBlkCnt = 0, nLnCnt = 0;
+	for (i = 0; i < MAX_VER_SIZE; i++)
+	{
+		nBlkCnt = 0;
+		for (j = 0; j < MAX_HOR_SIZE; j++)
+		{
+			if (mv_unBoardTable[i][j] == 2) { nBlkCnt++; }		//한 줄에 블록이 몇 개인지 셈
+		}
+		//i번 라인이 가득찬 라인이면
+		if (nBlkCnt >= MAX_HOR_SIZE)
+		{
+			nLnCnt++;	//라인 카운트 추가
+		}
+		//i번 라인이 가득차있지 않고 라인 카운트가 1이상이면
+		else if (nLnCnt > 0)
+		{
+			v_DeleteLine(i - 1, nLnCnt);	//i라인의 윗라인을 라인 카운트만큼 제거
+			nLnCnt = 0;
+		}
+	}
+
+	//가장 아랫라인부터 가득찬 경우
+	if (nLnCnt > 0)
+	{
+		v_DeleteLine(MAX_VER_SIZE - 1, nLnCnt);
+	}
+}
+
+//테이블 내 블록이 가득 찬 라인 제거함수
+void GameBoard::v_DeleteLine(int nLine, int nCount)
+{
+	int i, j;
+	//범위 1~nLine
+	for (i = nLine; i >= nCount; i--)
+	{
+		for (j = 0; j < MAX_HOR_SIZE; j++)
+		{
+			//i번 라인의 내용을 i-nCount라인의 내용으로 바꿈
+			mv_unBoardTable[i][j] = mv_unBoardTable[i - nCount][j];
+		}
+	}
+
+	//0~nCount라인 초기화
+	for (i = 0; i < nCount; i++)
+	{
+		for (j = 0; j < MAX_HOR_SIZE; j++)
+		{
+			mv_unBoardTable[i][j] = 0;
 		}
 	}
 }
@@ -148,10 +204,10 @@ GameBoard::GameBoard()
 	nxtBlk = nullptr;
 
 	//임시로 해놓음
-	CreateNextBlock();
-	CreateNextBlock();
-	UpdateBlockToBoard();
-	UpdateBoardToUI();
+	v_CreateNextBlock();
+	v_CreateNextBlock();
+	v_UpdateBlockToBoard();
+	v_UpdateBoardToUI();
 }
 
 //소멸자
@@ -171,7 +227,7 @@ std::wstring * GameBoard::GetUI()
 //블록 회전
 void GameBoard::BlockRotate()
 {
-	if (curBlk == nullptr || isGameOver) { return; }
+	if (curBlk == nullptr || m_isGameOver) { return; }
 	
 	//테이블에서 회전하기 전의 자리들을 0으로 초기화
 	if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0; }
@@ -181,20 +237,20 @@ void GameBoard::BlockRotate()
 	//회전
 	curBlk->Rotate(1);
 	//적용 시도
-	if (UpdateBlockToBoard() != SUCCESS)
+	if (v_UpdateBlockToBoard() != SUCCESS)
 	{
 		//실패 시 회전 취소
 		curBlk->Rotate(-1);
-		UpdateBlockToBoard();
+		v_UpdateBlockToBoard();
 	}
 	//출력UI에 적용
-	UpdateBoardToUI();
+	v_UpdateBoardToUI();
 }
 
 //방향이 음수면 왼쪽, 아니면 오른쪽 이동
 void GameBoard::BlockHorMove(int nDirection)
 {
-	if (curBlk == nullptr || isGameOver) { return; }
+	if (curBlk == nullptr || m_isGameOver) { return; }
 
 	//테이블에서 이동하기 전의 자리들을 0으로 초기화
 	if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 0; }
@@ -206,11 +262,11 @@ void GameBoard::BlockHorMove(int nDirection)
 	{
 		curBlk->Move(1);
 		//적용 시도
-		if (UpdateBlockToBoard() <= 0)
+		if (v_UpdateBlockToBoard() <= 0)
 		{
 			//실패 시 이동 취소
 			curBlk->Move(2);
-			UpdateBlockToBoard();
+			v_UpdateBlockToBoard();
 		}
 	}
 	//오른쪽 이동
@@ -218,21 +274,21 @@ void GameBoard::BlockHorMove(int nDirection)
 	{
 		curBlk->Move(2);
 		//적용 시도
-		if (UpdateBlockToBoard() <= 0)
+		if (v_UpdateBlockToBoard() <= 0)
 		{
 			//실패 시 이동 취소
 			curBlk->Move(1);
-			UpdateBlockToBoard();
+			v_UpdateBlockToBoard();
 		}
 	}
 	//출력 UI에 적용
-	UpdateBoardToUI();
+	v_UpdateBoardToUI();
 }
 
 //블록을 한 칸 아래로 내림
 void GameBoard::BlockDown()
 {
-	if (curBlk == nullptr || isGameOver) { return; }
+	if (curBlk == nullptr || m_isGameOver) { return; }
 
 	int sResult;
 	//테이블에서 이동하기 전의 자리들을 0으로 초기화
@@ -243,12 +299,12 @@ void GameBoard::BlockDown()
 	//한 칸 아래로 이동
 	curBlk->Move(-1);
 	//적용 시도
-	sResult = UpdateBlockToBoard();
+	sResult = v_UpdateBlockToBoard();
 	//실패 시 이동 취소
 	if (sResult <= 0)
 	{
 		curBlk->Move(0);
-		UpdateBlockToBoard();
+		v_UpdateBlockToBoard();
 		//null값 참조에 의한 실패가 아닌 경우(블록이 더이상 내려갈 수 없는 경우)
 		if (sResult != NULL_REFERENCE)
 		{
@@ -257,18 +313,19 @@ void GameBoard::BlockDown()
 			if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 2; }
 			if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 2; }
 			if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 2; }
+			v_CheckFullLine();
 			//새 블록 생성
-			CreateNextBlock();
+			v_CreateNextBlock();
 		}
 	}
 	//출력 UI에 적용
-	UpdateBoardToUI();
+	v_UpdateBoardToUI();
 }
 
 //블록을 맨 밑까지 한번에 내림
 void GameBoard::DropBlock()
 {
-	if (curBlk == nullptr || isGameOver) { return; }
+	if (curBlk == nullptr || m_isGameOver) { return; }
 
 	int sResult = SUCCESS;
 	
@@ -282,12 +339,12 @@ void GameBoard::DropBlock()
 		//한 칸 아래로 이동
 		curBlk->Move(-1);
 		//적용 시도
-		sResult = UpdateBlockToBoard();
+		sResult = v_UpdateBlockToBoard();
 		//실패 시 이동 취소
 		if (sResult != SUCCESS)
 		{
 			curBlk->Move(0);
-			UpdateBlockToBoard();
+			v_UpdateBlockToBoard();
 			//null값 참조에 의한 실패가 아닌 경우(블록이 더이상 내려갈 수 없는 경우)
 			if (sResult != NULL_REFERENCE)
 			{
@@ -296,11 +353,12 @@ void GameBoard::DropBlock()
 				if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 2; }
 				if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 2; }
 				if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 2; }
+				v_CheckFullLine();
 				//새 블록 생성
-				CreateNextBlock();
+				v_CreateNextBlock();
 			}
 		}
 	}
 	//출력 UI에 적용
-	UpdateBoardToUI();
+	v_UpdateBoardToUI();
 }

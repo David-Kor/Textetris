@@ -144,7 +144,7 @@ void UpdateSgGm()
 		}
 	}
 
-	if (g_pGameBoard->isGameOver)
+	if (g_pGameBoard->m_isGameOver)
 	{
 		g_isGameOver = true;
 	}
