@@ -24,6 +24,13 @@ void GameBoard::v_CreateNextBlock()
 		//블록 갱신에 실패하면 게임 종료
 		if (v_UpdateBlockToBoard() != SUCCESS)
 		{
+			//마지막 블럭 출력
+			if (curBlk->posMainBlk.Y >= 0) { mv_unBoardTable[curBlk->posMainBlk.Y][curBlk->posMainBlk.X] = 2; }
+			if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 2; }
+			if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 2; }
+			if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 2; }
+			v_UpdateBoardToUI();
+			//게임 종료상태 true
 			m_isGameOver = true;
 			return;
 		}
@@ -219,7 +226,7 @@ GameBoard::~GameBoard()
 	nxtBlk = nullptr;
 }
 
-std::wstring * GameBoard::GetUI()
+std::wstring* GameBoard::GetUI()
 {
 	return mv_wstrUI;
 }

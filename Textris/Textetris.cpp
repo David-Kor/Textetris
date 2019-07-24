@@ -59,7 +59,7 @@ void UpdateSgGm();		//1인 게임 진행
 void RenderSgGm();		//1인 게임 출력
 void FinalizeSgGm();		//1인 게임 종료 작업
 void SingleGameMain();	//1인 게임 main
-wstring* ReplaceFirstString(wstring* str, const wstring& from, const wstring& to);		//문자열 검색 및 치환
+wstring* ReplaceString(wstring* str, const wstring& from, const wstring& to);		//문자열 검색 및 치환
 unsigned int MainMenuPrint(const int nMoveDirect);		//메인 화면 출력
 
 //메인 메뉴
@@ -160,6 +160,17 @@ void RenderSgGm()
 //1인 게임 종료 작업
 void FinalizeSgGm()
 {
+	int i, j;
+	int nLine = g_pGameBoard->MAX_VER_SIZE, nWord = g_pGameBoard->MAX_HOR_SIZE;
+	wstring* pwstrUI = g_pGameBoard->GetUI();
+
+ 	for (i = nLine; i >= 0; i--)
+	{
+		ReplaceString(&pwstrUI[i], L"　", L"■");
+		g_Renderer.UpdateBuffer(pwstrUI, nLine);
+		g_Renderer.Rendering();
+		Sleep(100);
+	}
 	//게임 보드 메모리 할당 해제
 	delete g_pGameBoard;
 	g_pGameBoard = nullptr;
@@ -219,11 +230,11 @@ void SingleGameMain()
 }
 
 //str 문자열 내에 from 문자열을 찾아 to로 바꿈
-wstring* ReplaceFirstString(wstring* str, const wstring &from, const wstring &to)
+wstring* ReplaceString(wstring* str, const wstring &from, const wstring &to)
 {
 	size_t szPos = 0;
 
-	if ((szPos = str->find(from, szPos)) != wstring::npos)
+	while ((szPos = str->find(from, szPos)) != wstring::npos)
 	{
 		str->replace(szPos, from.length(), to);
 	}
@@ -236,7 +247,7 @@ unsigned int MainMenuPrint(const int nMoveDirect)
 	static unsigned int uiSelected = 1;
 
 	static wstring strMnSingle = L"■　　　▷　1.　혼자하기　　　　　　　　　　　　　　　　　　　　　　　■\n";
-	static wstring strMnMulti = L"■　　　▷　2.　같이하기　　　　　　　　　　　　　　　　　　　　　　　■\n";
+	static wstring strMnMulti = L"■　　　▷　2.　같이하기(미구현상태)　　　　　　　　　　　　　　　　　■\n";
 	static wstring strMnQuit = L"■　　　▷　3.　끝내기　　　　　　　　　　　　　　　　　　　　　　　　■\n";
 
 	size_t szPos = 0;
@@ -253,20 +264,20 @@ unsigned int MainMenuPrint(const int nMoveDirect)
 	switch (uiSelected)
 	{
 	case 1:
-		ReplaceFirstString(&strMnSingle, strNoSelected, strSelected);
-		ReplaceFirstString(&strMnMulti, strSelected, strNoSelected);
-		ReplaceFirstString(&strMnQuit, strSelected, strNoSelected);
+		ReplaceString(&strMnSingle, strNoSelected, strSelected);
+		ReplaceString(&strMnMulti, strSelected, strNoSelected);
+		ReplaceString(&strMnQuit, strSelected, strNoSelected);
 		break;
 
 	case 2:
-		ReplaceFirstString(&strMnMulti, strNoSelected, strSelected);
-		ReplaceFirstString(&strMnSingle, strSelected, strNoSelected);
-		ReplaceFirstString(&strMnQuit, strSelected, strNoSelected);
+		ReplaceString(&strMnMulti, strNoSelected, strSelected);
+		ReplaceString(&strMnSingle, strSelected, strNoSelected);
+		ReplaceString(&strMnQuit, strSelected, strNoSelected);
 		break;
 	case 3:
-		ReplaceFirstString(&strMnQuit, strNoSelected, strSelected);
-		ReplaceFirstString(&strMnSingle, strSelected, strNoSelected);
-		ReplaceFirstString(&strMnMulti, strSelected, strNoSelected);
+		ReplaceString(&strMnQuit, strNoSelected, strSelected);
+		ReplaceString(&strMnSingle, strSelected, strNoSelected);
+		ReplaceString(&strMnMulti, strSelected, strNoSelected);
 		break;
 	}
 
