@@ -23,10 +23,10 @@ public:
 	Blocks();
 	~Blocks();
 
-	void SetXPositionToCenter(const int& nMaxHorSize);
+	void SetXPositionToCenter(int nMaxHorSize);
 	void PositionUpdate();
-	void Move(const int& nDirType);
-	void Rotate(const int& nDirection);
+	void Move(int nDirType);
+	void Rotate(int nDirection);
 	int GetMinX();
 	int GetMaxX();
 	int GetMaxY();

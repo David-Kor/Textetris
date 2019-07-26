@@ -9,6 +9,8 @@ void GameBoard::v_CreateNextBlock()
 {
 	if (m_isGameOver) { return; }
 
+	AddScore(SCORE_BLOCK_DROP);
+
 	//현재 블록이 nullptr가 아니면 메모리에서 삭제
 	if (curBlk != nullptr)
 	{
@@ -100,6 +102,14 @@ void GameBoard::v_UpdateBoardToUI()
 	}
 }
 
+//현재 점수를 UI에 적용
+void GameBoard::v_UpdateScoreUI()
+{
+	//현재 점수를 wstring형으로 전환
+	std::wstring wstrScore = std::to_wstring(mv_nScore);
+	mv_wstrUI[MAX_VER_SIZE + 2] = L"　점수　" + wstrScore;
+}
+
 //가득찬 라인을 검사하여 제거
 void GameBoard::v_CheckFullLine()
 {
@@ -154,6 +164,8 @@ void GameBoard::v_DeleteLine(int nLine, int nCount)
 			mv_unBoardTable[i][j] = 0;
 		}
 	}
+
+	AddScore(SCORE_LINE_CLEAR * nCount);
 }
 
 
@@ -206,15 +218,15 @@ GameBoard::GameBoard()
 			mv_wstrUI[i] += L"　점수　0";
 		}
 	}
-
 	curBlk = nullptr;
 	nxtBlk = nullptr;
 
-	//임시로 해놓음
+	//nxt블록과 cur블록 생성
 	v_CreateNextBlock();
 	v_CreateNextBlock();
 	v_UpdateBlockToBoard();
 	v_UpdateBoardToUI();
+	mv_nScore = 0;
 }
 
 //소멸자
@@ -241,15 +253,108 @@ void GameBoard::BlockRotate()
 	if (curBlk->posSubBlk1.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk1.Y][curBlk->posSubBlk1.X] = 0; }
 	if (curBlk->posSubBlk2.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk2.Y][curBlk->posSubBlk2.X] = 0; }
 	if (curBlk->posSubBlk3.Y >= 0) { mv_unBoardTable[curBlk->posSubBlk3.Y][curBlk->posSubBlk3.X] = 0; }
+	
 	//회전
 	curBlk->Rotate(1);
 	//적용 시도
-	if (v_UpdateBlockToBoard() != SUCCESS)
+	int result = v_UpdateBlockToBoard();
+
+	//게임 보드 밖으로 넘어가는 실패인 경우
+	if (result == OUT_OF_INDEX)
 	{
-		//실패 시 회전 취소
-		curBlk->Rotate(-1);
-		v_UpdateBlockToBoard();
+		//블록이 왼쪽 끝을 넘었다면
+		if (curBlk->GetMinX() < 0)
+		{
+			//오른쪽 한 칸만 이동 시도
+			curBlk->Move(2);
+			result = v_UpdateBlockToBoard();
+			//실패 시 한 번 더 시도
+			if (result != SUCCESS)
+			{
+				//오른쪽 한 칸 더 이동 시도
+				curBlk->Move(2);
+				result = v_UpdateBlockToBoard();
+				//이번에도 실패 시 모든 이동 및 회전 취소
+				if (result != SUCCESS)
+				{
+					curBlk->Move(1);
+					curBlk->Move(1);
+					curBlk->Rotate(-1);
+				}
+			}
+		}
+		//블록이 오른쪽 끝을 넘었다면
+		else if (curBlk->GetMaxX() >= MAX_HOR_SIZE)
+		{
+			//왼쪽 한 칸만 이동 시도
+			curBlk->Move(1);
+			result = v_UpdateBlockToBoard();
+			//실패 시 한 번 더 시도
+			if (result != SUCCESS)
+			{
+				//왼쪽 한 칸 더 이동 시도
+				curBlk->Move(1);
+				result = v_UpdateBlockToBoard();
+				//이번에도 실패 시 모든 이동 및 회전 취소
+				if (result != SUCCESS)
+				{
+					curBlk->Move(2);
+					curBlk->Move(2);
+					curBlk->Rotate(-1);
+				}
+			}
+		}
+		//블록이 아래쪽 끝을 넘었다면
+		else
+		{
+			//회전 취소
+			curBlk->Rotate(-1);
+			v_UpdateBlockToBoard();
+		}
 	}
+	//블록과 충돌하는 실패인 경우
+	else if (result == CRASH_BLOCK)
+	{
+		//왼쪽 한 칸만 이동 시도
+		curBlk->Move(1);
+		result = v_UpdateBlockToBoard();
+		//실패 시 한 번 더 시도
+		if (result != SUCCESS)
+		{
+			//왼쪽 한 칸 더 이동 시도
+			curBlk->Move(1);
+			result = v_UpdateBlockToBoard();
+			//실패 시 모든 이동 취소
+			if (result != SUCCESS)
+			{
+				curBlk->Move(2);
+				curBlk->Move(2);
+			}
+		}
+
+		//왼쪽이 실패 시 오른쪽 시도
+		if (result != SUCCESS)
+		{
+			//오른쪽 한 칸만 이동 시도
+			curBlk->Move(2);
+			result = v_UpdateBlockToBoard();
+			//실패 시 한 번 더 시도
+			if (result != SUCCESS)
+			{
+				//오른쪽 한 칸 더 이동 시도
+				curBlk->Move(2);
+				result = v_UpdateBlockToBoard();
+				//이번에도 실패 시 모든 이동 및 회전 취소
+				if (result != SUCCESS)
+				{
+					curBlk->Move(1);
+					curBlk->Move(1);
+					curBlk->Rotate(-1);
+				}
+			}
+		}
+	}
+	
 	//출력UI에 적용
 	v_UpdateBoardToUI();
 }
@@ -368,4 +473,32 @@ void GameBoard::DropBlock()
 	}
 	//출력 UI에 적용
 	v_UpdateBoardToUI();
+}
+
+void GameBoard::SetTime(float fSec)
+{
+	fSec = (int)(fSec * 10) / 10.0f;
+
+	if (mv_fTime != fSec)
+	{
+		mv_fTime = fSec;
+		wchar_t wstrTime[8] = { 0, };
+		std::swprintf(wstrTime, sizeof(wstrTime) / sizeof(wchar_t), L"%.1f", fSec);		//소수점 1자리까지 적용
+		mv_wstrUI[MAX_VER_SIZE + 1] = L"　시간　";
+		for (int i = 0; i < 5; i++)
+		{
+			mv_wstrUI[MAX_VER_SIZE + 1] += wstrTime[i];
+		}
+	}
+}
+
+void GameBoard::AddScore(int nScore)
+{
+	mv_nScore += nScore;
+	v_UpdateScoreUI();
+}
+
+int GameBoard::GetScore()
+{
+	return mv_nScore;
 }

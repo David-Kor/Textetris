@@ -17,7 +17,7 @@ Blocks::~Blocks()
 }
 
 //블록 전체가 X축 가운데에 오도록 배치
-void Blocks::SetXPositionToCenter(const int& nMaxHorSize)
+void Blocks::SetXPositionToCenter(int nMaxHorSize)
 {
 	switch (nBlockType)
 	{
@@ -343,7 +343,7 @@ void Blocks::PositionUpdate()
 }
 
 //이동 (방향이 음수면 아래, 0이면 위, 1이면 왼쪽, 2이상이면 오른쪽)
-void Blocks::Move(const int& nDirection)
+void Blocks::Move(int nDirection)
 {
 	//아래로 이동
 	if (nDirection < 0)
@@ -372,7 +372,7 @@ void Blocks::Move(const int& nDirection)
 }
 
 //회전 (음수면 시계방향, 아니면 시계방향)
-void Blocks::Rotate(const int& nDirType)
+void Blocks::Rotate(int nDirType)
 {
 	if (nDirType < 0)
 	{

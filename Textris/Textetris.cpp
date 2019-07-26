@@ -16,6 +16,7 @@
 #define	MN_2_LINE		12
 #define	MN_3_LINE		14
 #define	FPS	60		//초당 프레임 수
+#define	AUTO_DOWN_DELAY		1.5f	//블록이 자동으로 내려가는 기본 시간(단위 : 초)
 
 using namespace std;
 
@@ -55,12 +56,12 @@ bool g_isGameOver = false;		//게임 종료 여부
 
 //함수 들
 void InitializeSgGm();		//1인 게임 초기화
-void UpdateSgGm();		//1인 게임 진행
+void UpdateSgGm(const float fDeltaTime, const float fTime);		//1인 게임 진행
 void RenderSgGm();		//1인 게임 출력
 void FinalizeSgGm();		//1인 게임 종료 작업
 void SingleGameMain();	//1인 게임 main
 wstring* ReplaceString(wstring* str, const wstring& from, const wstring& to);		//문자열 검색 및 치환
-unsigned int MainMenuPrint(const int nMoveDirect);		//메인 화면 출력
+unsigned int MainMenuPrint(int nMoveDirect);		//메인 화면 출력
 
 //메인 메뉴
 int main()
@@ -120,8 +121,37 @@ void InitializeSgGm()
 }
 
 //1인 게임 진행
-void UpdateSgGm()
+void UpdateSgGm(const float fDeltaTime, const float fTime)
 {
+	//타이머 변수
+	static float fDwnTimer = 0;
+	//블록이 자동으로 내려가는 시간
+	float fDwnSpeed = AUTO_DOWN_DELAY + 0.5f;
+
+	//30초부터 스피드가 점점 빨라짐
+	if (fTime > 30)
+	{
+		fDwnSpeed = AUTO_DOWN_DELAY / (0.5f + 0.0083f * fTime);	//약 1/120 수준
+		//최대 스피드 제한
+		if (fDwnSpeed <= 0.25f)
+		{
+			fDwnSpeed = 0.25f;
+		}
+	}
+
+	//타이머 작동
+	fDwnTimer += fDeltaTime;
+
+	g_pGameBoard->SetTime(fTime);
+	//최대 속도 제한
+	if (fDwnSpeed < 0.1f) { fDwnSpeed = 0.1f; }
+	//일정 시간마다 자동으로 블록을 아래로 내림
+	if (fDwnTimer >= fDwnSpeed)
+	{
+		fDwnTimer -= fDwnSpeed;
+		g_pGameBoard->BlockDown();
+	}
+
 	if (g_Input.IsAnyKeyDown())
 	{
 		switch (g_Input.GetInputKey())
@@ -131,6 +161,7 @@ void UpdateSgGm()
 			break;
 		case Input::DOWN:
 			g_pGameBoard->BlockDown();
+			fDwnTimer = 0;	//강제로 아래로 내리면 타이머 초기화
 			break;
 		case Input::LEFT:
 			g_pGameBoard->BlockHorMove(-1);
@@ -140,6 +171,7 @@ void UpdateSgGm()
 			break;
 		case Input::SPACE:
 			g_pGameBoard->DropBlock();
+			fDwnTimer = 0;	//강제로 아래로 내리면 타이머 초기화
 			break;
 		}
 	}
@@ -160,9 +192,11 @@ void RenderSgGm()
 //1인 게임 종료 작업
 void FinalizeSgGm()
 {
-	int i, j;
+	int i;
 	int nLine = g_pGameBoard->MAX_VER_SIZE, nWord = g_pGameBoard->MAX_HOR_SIZE;
 	wstring* pwstrUI = g_pGameBoard->GetUI();
+
+	RenderSgGm();
 
  	for (i = nLine; i >= 0; i--)
 	{
@@ -187,9 +221,9 @@ void SingleGameMain()
 {
 	float fPrevTime = 0;	//한 프레임 실행 이전 시간 (T)
 	float fCurTime = clock() * 0.001f;	//한 프레임 실행 이후 시간 (T')	 [ 단위 : 초(s) ]
-	float time = 0;		//게임 내 경과 시간 (CPU 사정에 따라 실제 경과 시간과 다름)
-	float acc = 0;		//누산용 변수
-	float fFrameTime;	//실제 ΔT (한 프레임 처리에 걸린 시간)
+	float time = 0;			//게임 내 경과 시간 (CPU 사정에 따라 실제 경과 시간과 다름)
+	float acc = 0;			//누산용 변수
+	float fFrameTime;		//실제 ΔT (한 프레임 처리에 걸린 시간)
 	const float MAX_DELTA_TIME = 1.5f / FPS;	//최대 ΔT
 	const float DELTA_TIME = 1.0f / FPS;			//기본 ΔT (지정 프레임 시간)
 
@@ -212,9 +246,10 @@ void SingleGameMain()
 		acc += fFrameTime;
 		
 		//지정한 기본 ΔT보다 오래 걸린 경우 지연시간을 포함하여 계산
+		//누산 결과가 ΔT보다 짧은 경우 연산하지 않음
 		while (acc >= DELTA_TIME)
 		{
-			UpdateSgGm();		//게임 데이터 갱신
+			UpdateSgGm(acc, time);	//게임 데이터 갱신
 			acc -= DELTA_TIME;		//기본 ΔT만큼 빼서 지연시간을 누적 저장
 			time += DELTA_TIME;	//게임 내 경과시간
 		}
@@ -242,7 +277,7 @@ wstring* ReplaceString(wstring* str, const wstring &from, const wstring &to)
 }
 
 //메인 화면 출력
-unsigned int MainMenuPrint(const int nMoveDirect)
+unsigned int MainMenuPrint(int nMoveDirect)
 {
 	static unsigned int uiSelected = 1;
 
