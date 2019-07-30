@@ -20,7 +20,6 @@ void GameBoard::v_CreateNextBlock()
 	//다음 블록이 nullptr가 아니면 좌표를 갱신 후 현재 블록으로 지정
 	if (nxtBlk != nullptr)
 	{
-		nxtBlk->PositionUpdate();
 		curBlk = nxtBlk;	//다음 나올 블록을 현재 블록으로 지정
 		nxtBlk = nullptr;
 		//블록 갱신에 실패하면 게임 종료
@@ -40,6 +39,19 @@ void GameBoard::v_CreateNextBlock()
 
 	nxtBlk = new Blocks();	//다음 나올 새 블록 생성
 	nxtBlk->SetXPositionToCenter(MAX_HOR_SIZE);	//블록을 가운데에 배치
+	nxtBlk->PositionUpdate();
+
+	//다음 나올 블록을 UI에 출력
+	for (int i = 0; i < 4; i++)
+	{
+		//공백으로 초기화
+		mv_wstrUI[NXT_BLK_LINE_1][12 + i] = L'　';
+		mv_wstrUI[NXT_BLK_LINE_2][12 + i] = L'　';
+	}
+	mv_wstrUI[nxtBlk->posMainBlk.Y + NXT_BLK_Y_HANDLE][nxtBlk->posMainBlk.X + NXT_BLK_X_HANDLE] = L'■';
+	mv_wstrUI[nxtBlk->posSubBlk1.Y + NXT_BLK_Y_HANDLE][nxtBlk->posSubBlk1.X + NXT_BLK_X_HANDLE] = L'■';
+	mv_wstrUI[nxtBlk->posSubBlk2.Y + NXT_BLK_Y_HANDLE][nxtBlk->posSubBlk2.X + NXT_BLK_X_HANDLE] = L'■';
+	mv_wstrUI[nxtBlk->posSubBlk3.Y + NXT_BLK_Y_HANDLE][nxtBlk->posSubBlk3.X + NXT_BLK_X_HANDLE] = L'■';
 }
 
 //curBlk의 좌표를 테이블에 적용 시도 후 결과 반환 -> 인덱스 벗어남(-2), 블록 곂침(-1), 널값 참조(0), 성공(1 이상)
@@ -100,14 +112,6 @@ void GameBoard::v_UpdateBoardToUI()
 			else { mv_wstrUI[i][j + 1] = BLOCK; }
 		}
 	}
-}
-
-//현재 점수를 UI에 적용
-void GameBoard::v_UpdateScoreUI()
-{
-	//현재 점수를 wstring형으로 전환
-	std::wstring wstrScore = std::to_wstring(mv_nScore);
-	mv_wstrUI[MAX_VER_SIZE + 2] = L"　점수　" + wstrScore;
 }
 
 //가득찬 라인을 검사하여 제거
@@ -200,33 +204,40 @@ GameBoard::GameBoard()
 			//보드 우측 벽
 			mv_wstrUI[i] += WALL;
 		}
-		//보드 아래 벽
-		else if (i == MAX_VER_SIZE)
-		{
-			for (j = 0; j <= MAX_HOR_SIZE; j++)
-			{
-				mv_wstrUI[i] += WALL; 
-			}
-		}
-		else if (i == MAX_VER_SIZE + 1)
-		{
-			mv_wstrUI[i] += L"　시간　0";
-		}
-
-		else if (i == MAX_VER_SIZE + 2)
-		{
-			mv_wstrUI[i] += L"　점수　0";
-		}
 	}
+
+	//다음 나올 블록UI의 공간
+	mv_wstrUI[NXT_BLK_LINE_1-1]	+= L"▣▣▣▣▣";
+	mv_wstrUI[NXT_BLK_LINE_1]	+= L"　　　　▣";
+	mv_wstrUI[NXT_BLK_LINE_2]	+= L"　　　　▣";
+	mv_wstrUI[NXT_BLK_LINE_2+1]	+= L"▣▣▣▣▣";
+
+	//아래 벽UI
+	for (j = 0; j <= MAX_HOR_SIZE; j++)
+	{
+		//보드 아래 벽
+		mv_wstrUI[MAX_VER_SIZE] += WALL;
+		//시간,점수 UI 아래 벽
+		mv_wstrUI[MAX_UI_LINE - 1] += WALL;
+	}
+
+	//시간 및 점수 UI
+	mv_wstrUI[MAX_VER_SIZE + 1] += L"　시간　";
+	mv_wstrUI[MAX_VER_SIZE + 2] += L"　점수　";
+
 	curBlk = nullptr;
 	nxtBlk = nullptr;
-
 	//nxt블록과 cur블록 생성
 	v_CreateNextBlock();
 	v_CreateNextBlock();
 	v_UpdateBlockToBoard();
 	v_UpdateBoardToUI();
+
+	//점수,시간 UI 초기화
 	mv_nScore = 0;
+	mv_fTime = 0.0f;
+	AddScore(0);
+	SetTime(mv_fTime);
 }
 
 //소멸자
@@ -318,14 +329,27 @@ void GameBoard::BlockRotate()
 		//왼쪽 한 칸만 이동 시도
 		curBlk->Move(1);
 		result = v_UpdateBlockToBoard();
-		//실패 시 한 번 더 시도
-		if (result != SUCCESS)
+
+		//성공 시 적용
+		if (result == SUCCESS)
 		{
-			//왼쪽 한 칸 더 이동 시도
+			v_UpdateBoardToUI();
+			return;
+		}
+		//실패 시 왼쪽 두 칸째 이동 시도
+		else
+		{
 			curBlk->Move(1);
 			result = v_UpdateBlockToBoard();
-			//실패 시 모든 이동 취소
-			if (result != SUCCESS)
+
+			//성공 시 적용
+			if (result == SUCCESS)
+			{
+				v_UpdateBoardToUI();
+				return;
+			}
+			//실패 시 왼쪽 이동 취소
+			else
 			{
 				curBlk->Move(2);
 				curBlk->Move(2);
@@ -333,26 +357,35 @@ void GameBoard::BlockRotate()
 		}
 
 		//왼쪽이 실패 시 오른쪽 시도
-		if (result != SUCCESS)
+		curBlk->Move(2);
+		result = v_UpdateBlockToBoard();
+
+		if (result == SUCCESS)
 		{
-			//오른쪽 한 칸만 이동 시도
+			v_UpdateBoardToUI();
+			return;
+		}
+		//실패 시 오른쪽 두 칸째 이동 시도
+		else
+		{
 			curBlk->Move(2);
 			result = v_UpdateBlockToBoard();
-			//실패 시 한 번 더 시도
-			if (result != SUCCESS)
+			if (result == SUCCESS)
 			{
-				//오른쪽 한 칸 더 이동 시도
-				curBlk->Move(2);
-				result = v_UpdateBlockToBoard();
-				//이번에도 실패 시 모든 이동 및 회전 취소
-				if (result != SUCCESS)
-				{
-					curBlk->Move(1);
-					curBlk->Move(1);
-					curBlk->Rotate(-1);
-				}
+				v_UpdateBoardToUI();
+				return;
+			}
+			//실패 시 오른쪽 이동 취소
+			else
+			{
+				curBlk->Move(1);
+				curBlk->Move(1);
 			}
 		}
+
+		//회전 취소
+		curBlk->Rotate(-1);
+		v_UpdateBlockToBoard();
 	}
 	
 	//출력UI에 적용
@@ -477,25 +510,34 @@ void GameBoard::DropBlock()
 
 void GameBoard::SetTime(float fSec)
 {
+	static std::wstring wstrTimeUI = mv_wstrUI[MAX_VER_SIZE + 1];
+	//소수점 첫째자리 아래로 버림
 	fSec = (int)(fSec * 10) / 10.0f;
 
+	//0.1초단위로 시간 UI갱신
 	if (mv_fTime != fSec)
 	{
 		mv_fTime = fSec;
-		wchar_t wstrTime[8] = { 0, };
+		wchar_t wstrTime[8] = { NULL, };
 		std::swprintf(wstrTime, sizeof(wstrTime) / sizeof(wchar_t), L"%.1f", fSec);		//소수점 1자리까지 적용
-		mv_wstrUI[MAX_VER_SIZE + 1] = L"　시간　";
-		for (int i = 0; i < 5; i++)
+
+		mv_wstrUI[MAX_VER_SIZE + 1] = wstrTimeUI;
+		for (int i = 0; i < 8; i++)
 		{
 			mv_wstrUI[MAX_VER_SIZE + 1] += wstrTime[i];
+			if (wstrTime[i] == NULL) { break; }
 		}
 	}
 }
 
 void GameBoard::AddScore(int nScore)
 {
+	static std::wstring wstrScoreUI = mv_wstrUI[MAX_VER_SIZE + 2];
 	mv_nScore += nScore;
-	v_UpdateScoreUI();
+
+	//현재 점수를 wstring형으로 전환
+	std::wstring wstrScore = std::to_wstring(mv_nScore);
+	mv_wstrUI[MAX_VER_SIZE + 2] = wstrScoreUI + wstrScore;
 }
 
 int GameBoard::GetScore()

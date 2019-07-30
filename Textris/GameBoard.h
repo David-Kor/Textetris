@@ -6,7 +6,7 @@
 class GameBoard
 {
 private:
-	std::wstring mv_wstrUI[23];	//UI 텍스트
+	std::wstring mv_wstrUI[24];	//UI 텍스트
 	Blocks* curBlk;		//현재 컨트롤 중인 블록
 	Blocks* nxtBlk;		//다음 나올 블록
 	unsigned int mv_unBoardTable[20][10];	//보드판 세로길이 x 보드판 가로길이
@@ -19,10 +19,14 @@ private:
 	const int NULL_REFERENCE = 0;
 	const int SUCCESS = 1;
 
+	const int NXT_BLK_LINE_1 = 1;
+	const int NXT_BLK_LINE_2 = 2;
+	const int NXT_BLK_X_HANDLE = 9;
+	const int NXT_BLK_Y_HANDLE = 2;
+
 	void v_CreateNextBlock();
 	int v_UpdateBlockToBoard();
 	void v_UpdateBoardToUI();
-	void v_UpdateScoreUI();
 	void v_CheckFullLine();
 	void v_DeleteLine(int nLine, int nCount);
 
@@ -33,7 +37,7 @@ public:
 	//보드판 가로길이
 	const int MAX_HOR_SIZE = 10;
 	//전체 UI 라인 수
-	const int MAX_UI_LINE = 23;
+	const int MAX_UI_LINE = 24;
 
 	//블록을 끝까지 내렸을 때 획득하는 점수
 	const int SCORE_BLOCK_DROP = 10;
