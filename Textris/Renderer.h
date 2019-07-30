@@ -13,8 +13,8 @@ public:
 	Renderer(const short sMaxWord, const short sMaxline);
 	~Renderer();
 
-	void UpdateBuffer(const std::wstring *pwStr, const size_t &count);
-	void UpdateBuffer(const std::wstring *pwStr, const size_t &count, const short cursorX);
+	void UpdateBuffer(const std::wstring *pwStr, const int &count);
+	void UpdateBuffer(const std::wstring *pwStr, const int &count, const short cursorX);
 	void Rendering();
 	void ResetBuffer();
 };

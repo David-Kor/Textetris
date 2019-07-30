@@ -38,14 +38,14 @@ Renderer::~Renderer()
 }
 
 //버퍼 쓰기 (커서위치 0,0)
-void Renderer::UpdateBuffer(const std::wstring *pwStr, const size_t &count)
+void Renderer::UpdateBuffer(const std::wstring *pwStr, const int &count)
 {
 	DWORD dw;   //좌표를 저장하기 위한 구조채를 선언.
 	COORD CursorPosition = { 0, 0 };    //좌표 설정
 
 	SetConsoleCursorPosition(mv_hBuffer[mv_nScreenIndex], CursorPosition);    //좌표 이동
 
-	for (size_t i = 0; i < count; i++, CursorPosition.Y++)
+	for (int i = 0; i < count; i++, CursorPosition.Y++)
 	{
 		SetConsoleCursorPosition(mv_hBuffer[mv_nScreenIndex], CursorPosition);    //좌표 이동
 		WriteConsoleW(mv_hBuffer[mv_nScreenIndex], pwStr[i].c_str(), pwStr[i].length(), &dw, NULL);		//버퍼에 씀
@@ -53,14 +53,14 @@ void Renderer::UpdateBuffer(const std::wstring *pwStr, const size_t &count)
 }
 
 //커서위치 지정
-void Renderer::UpdateBuffer(const std::wstring *pwStr, const size_t &count, const short cursorX)
+void Renderer::UpdateBuffer(const std::wstring *pwStr, const int &count, const short cursorX)
 {
 	DWORD dw;   //좌표를 저장하기 위한 구조채를 선언.
 	COORD CursorPosition = { cursorX, 0 };    //좌표 설정
 
 	SetConsoleCursorPosition(mv_hBuffer[mv_nScreenIndex], CursorPosition);    //좌표 이동
 	
-	for (size_t i = 0; i < count; i++, CursorPosition.Y++)
+	for (int i = 0; i < count; i++, CursorPosition.Y++)
 	{
 		SetConsoleCursorPosition(mv_hBuffer[mv_nScreenIndex], CursorPosition);    //좌표 이동
 		WriteConsoleW(mv_hBuffer[mv_nScreenIndex], pwStr[i].c_str(), pwStr[i].length(), &dw, NULL);		//버퍼에 씀
