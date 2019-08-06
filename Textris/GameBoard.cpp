@@ -536,7 +536,8 @@ void GameBoard::AddScore(int nScore)
 	mv_nScore += nScore;
 
 	//현재 점수를 wstring형으로 전환
-	std::wstring wstrScore = std::to_wstring(mv_nScore);
+	wchar_t wstrScore[11] = { 0, };
+	std::swprintf(wstrScore, sizeof(wstrScore) / sizeof(wchar_t), L"%010u", mv_nScore);
 	mv_wstrUI[MAX_VER_SIZE + 2] = wstrScoreUI + wstrScore;
 }
 

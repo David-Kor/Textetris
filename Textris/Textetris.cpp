@@ -17,6 +17,7 @@
 #define	MN_3_LINE		14
 #define	FPS	60		//초당 프레임 수
 #define	AUTO_DOWN_DELAY		1.5f	//블록이 자동으로 내려가는 기본 시간(단위 : 초)
+#define	CURRENT_VERSION	1.0		//현재 개발 버전
 
 using namespace std;
 
@@ -26,15 +27,15 @@ Renderer g_Renderer(MAX_WORD, MAX_LINE);		//콘솔화면 출력 담당 클래스
 GameBoard* g_pGameBoard = nullptr;			//게임 데이터 담당 클래스
 wstring g_wstrMainMenu[MAX_LINE] =		//메인메뉴에 출력될 문자열
 {
-/*1*/		L"　　　　■■■ ■■■ ■　　　■ ■■■ ■■■　 ■■■  ■■■",
-/*2*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 ■",
-/*3*/		L"　　　　　■　 ■■■ 　　■　　 　■　 ■■■　 　■　  ■■■",
-/*4*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 　　　■",
-/*5*/		L"　　　　　■　 ■■■ ■　　　■ 　■　 ■　　■ ■■■  ■■■",
-/*6*/		L"　",
-/*7*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■",
+/*1*/		L"　",
+/*2*/		L"　　　　■■■ ■■■ ■　　　■ ■■■ ■■■　 ■■■  ■■■",
+/*3*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 ■",
+/*4*/		L"　　　　　■　 ■■■ 　　■　　 　■　 ■■■　 　■　  ■■■",
+/*5*/		L"　　　　　■　 ■　　 　■　■　 　■　 ■　　■ 　■　 　　　■",
+/*6*/		L"　　　　　■　 ■■■ ■　　　■ 　■　 ■　　■ ■■■  ■■■",
+/*7*/		L"　",
 /*8*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■",
-/*9*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*9*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■",
 /*10*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
 /*11*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
 /*12*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
@@ -43,14 +44,14 @@ wstring g_wstrMainMenu[MAX_LINE] =		//메인메뉴에 출력될 문자열
 /*15*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
 /*16*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
 /*17*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
-/*18*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■",
-/*19*/		L"",
-/*20*/		L"",
-/*21*/		L"",
-/*22*/		L"",
-/*23*/		L"",
-/*24*/		L"",
-/*25*/		L""
+/*18*/		L"■　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　■",
+/*19*/		L"■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■",
+/*20*/		L"　",
+/*21*/		L"　",
+/*22*/		L"　",
+/*23*/		L"　",
+/*24*/		L"　",
+/*25*/		L"　"
 };
 bool g_isGameOver = false;		//게임 종료 여부
 
@@ -60,6 +61,11 @@ void UpdateSgGm(const float fDeltaTime, const float fTime);		//1인 게임 진�
 void RenderSgGm();		//1인 게임 출력
 void FinalizeSgGm();		//1인 게임 종료 작업
 void SingleGameMain();	//1인 게임 main
+void MultiGameMain();
+void InitializeMltGm();
+void UpdateMltGm(const float fDeltaTime, const float fTime);		//
+void RenderMltGm();		//
+void FinalizeMltGm();		//
 wstring* ReplaceString(wstring* str, const wstring& from, const wstring& to);		//문자열 검색 및 치환
 unsigned int MainMenuPrint(int nMoveDirect);		//메인 화면 출력
 
@@ -90,6 +96,7 @@ int main()
 					SingleGameMain();
 					break;
 				case MULTI_GAME:
+					MultiGameMain();
 					break;
 				case QUIT_GAME:	//종료
 					return 0;
@@ -114,10 +121,10 @@ void InitializeSgGm()
 
 	//전역 포인터 변수 초기화
 	g_pGameBoard = new GameBoard();
-	//초기 화면 출력
-	wstring* pwstrUI = g_pGameBoard->GetUI();
-	g_Renderer.UpdateBuffer(pwstrUI, g_pGameBoard->MAX_UI_LINE);
-	g_Renderer.Rendering();
+	//게임보드 초기 화면 출력
+	RenderSgGm();
+	//1초 후 게임 시작
+	Sleep(1000);
 }
 
 //1인 게임 진행
@@ -262,6 +269,69 @@ void SingleGameMain()
 
 	//게임 종료
 	FinalizeSgGm();
+}
+
+void InitializeMltGm()
+{
+}
+
+void UpdateMltGm(const float fDeltaTime, const float fTime)
+{
+}
+
+void RenderMltGm()
+{
+}
+
+void FinalizeMltGm()
+{
+}
+
+void MultiGameMain()
+{
+	float fPrevTime = 0;	//한 프레임 실행 이전 시간 (T)
+	float fCurTime = clock() * 0.001f;	//한 프레임 실행 이후 시간 (T')	 [ 단위 : 초(s) ]
+	float time = 0;			//게임 내 경과 시간 (CPU 사정에 따라 실제 경과 시간과 다름)
+	float acc = 0;			//누산용 변수
+	float fFrameTime;		//실제 ΔT (한 프레임 처리에 걸린 시간)
+	const float MAX_DELTA_TIME = 1.5f / FPS;	//최대 ΔT
+	const float DELTA_TIME = 1.0f / FPS;			//기본 ΔT (지정 프레임 시간)
+
+	//게임 초기화
+	InitializeMltGm();
+
+	//프레임
+	while (true)
+	{
+		fPrevTime = fCurTime;			//이전 시각 (T)
+		fCurTime = clock() * 0.001f;		//현재 시각 (T')
+		fFrameTime = fCurTime - fPrevTime;		//한 프레임당 걸린 시간 (ΔT = T' - T)
+
+		//최대 ΔT 제한
+		if (fFrameTime > MAX_DELTA_TIME)
+		{
+			fFrameTime = MAX_DELTA_TIME;
+		}
+		//누산 변수에 ΔT 저장
+		acc += fFrameTime;
+
+		//지정한 기본 ΔT보다 오래 걸린 경우 지연시간을 포함하여 계산
+		//누산 결과가 ΔT보다 짧은 경우 연산하지 않음
+		while (acc >= DELTA_TIME)
+		{
+			UpdateMltGm(acc, time);	//게임 데이터 갱신
+			acc -= DELTA_TIME;		//기본 ΔT만큼 빼서 지연시간을 누적 저장
+			time += DELTA_TIME;	//게임 내 경과시간
+		}
+
+		//출력
+		RenderMltGm();
+
+		if (g_isGameOver) { break; }
+	}
+
+	//게임 종료
+	FinalizeMltGm();
 }
 
 //str 문자열 내에 from 문자열을 찾아 to로 바꿈
