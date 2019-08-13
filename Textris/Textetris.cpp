@@ -7,14 +7,23 @@
  *	조작키	: 키보드 방향키(↑, ↓, ←, →) / 스페이스 바 / 엔터 / ESC키
  */
 #include "pch.h"
+
 #define	SINGLE_GAME	1
 #define	MULTI_GAME	2
 #define	QUIT_GAME		3
+
 #define	MAX_WORD		80
 #define	MAX_LINE			25
 #define	MN_1_LINE		10
 #define	MN_2_LINE		12
 #define	MN_3_LINE		14
+
+//통신 타입
+#define	T_HOST		0
+#define	T_CLIENT		1
+
+#define MY_PORT		43014
+
 #define	FPS	60		//초당 프레임 수
 #define	AUTO_DOWN_DELAY		1.5f	//블록이 자동으로 내려가는 기본 시간(단위 : 초)
 #define	CURRENT_VERSION	1.0		//현재 개발 버전
@@ -55,17 +64,19 @@ wstring g_wstrMainMenu[MAX_LINE] =		//메인메뉴에 출력될 문자열
 };
 bool g_isGameOver = false;		//게임 종료 여부
 
+
 //함수 들
 void InitializeSgGm();		//1인 게임 초기화
 void UpdateSgGm(const float fDeltaTime, const float fTime);		//1인 게임 진행
 void RenderSgGm();		//1인 게임 출력
 void FinalizeSgGm();		//1인 게임 종료 작업
 void SingleGameMain();	//1인 게임 main
-void MultiGameMain();
 void InitializeMltGm();
 void UpdateMltGm(const float fDeltaTime, const float fTime);		//
 void RenderMltGm();		//
 void FinalizeMltGm();		//
+int MultiMenuSelect();
+void MultiGameMain();
 wstring* ReplaceString(wstring* str, const wstring& from, const wstring& to);		//문자열 검색 및 치환
 unsigned int MainMenuPrint(int nMoveDirect);		//메인 화면 출력
 
@@ -287,8 +298,105 @@ void FinalizeMltGm()
 {
 }
 
+int MultiMenuSelect()
+{
+	int nSelectNum = 0;
+	static wstring wstrMsg[] =
+	{
+		L"같이하기는 1:1 대결(2인)만 지원합니다.",
+		L"▶ 방 만들기 - 상대방의 참여를 기다립니다.",
+		L"▷ 참여하기 - 상대의 IP를 입력하여 방에 참여합니다.",
+		L"▷ 취소 - 메인 화면으로 돌아갑니다."
+	};
+
+	/* 메뉴 출력 부분 */
+	//초기 메뉴 출력
+	g_Renderer.ResetBuffer();
+	g_Renderer.Rendering();
+	g_Renderer.ResetBuffer();
+	g_Renderer.UpdateBuffer(wstrMsg, 4);
+	g_Renderer.Rendering();
+
+	while (true)
+	{
+		if (g_Input.IsAnyKeyDown())
+		{
+			switch (g_Input.GetInputKey())
+			{
+			case Input::DOWN:	//아래 키를 입력
+				nSelectNum = (nSelectNum + 1) % 3;
+				break;
+
+			case Input::UP:	//위 키를 입력
+				((nSelectNum - 1) < 0) ? (nSelectNum = 2) : (nSelectNum--);
+				break;
+			case Input::ENTER:
+			case Input::SPACE:
+				return nSelectNum;
+				break;
+			}	//switch문 끝
+
+
+			if (nSelectNum == 0)
+			{
+				ReplaceString(&wstrMsg[1], L"▷", L"▶");
+				ReplaceString(&wstrMsg[2], L"▶", L"▷");
+				ReplaceString(&wstrMsg[3], L"▶", L"▷");
+			}
+			else if (nSelectNum == 1)
+			{
+				ReplaceString(&wstrMsg[1], L"▶", L"▷");
+				ReplaceString(&wstrMsg[2], L"▷", L"▶");
+				ReplaceString(&wstrMsg[3], L"▶", L"▷");
+			}
+			else
+			{
+				ReplaceString(&wstrMsg[1], L"▶", L"▷");
+				ReplaceString(&wstrMsg[2], L"▶", L"▷");
+				ReplaceString(&wstrMsg[3], L"▷", L"▶");
+			}
+			//출력
+			g_Renderer.UpdateBuffer(wstrMsg, 4);
+			g_Renderer.Rendering();
+		}
+	}
+}
+
+char* InputIPAddr()
+{
+}
+
 void MultiGameMain()
 {
+	int nMyType = MultiMenuSelect();
+	SOCKET hSvSock, hSocket;
+	SOCKADDR_IN tAddr = { 0, };
+	return;
+	//방 만들기
+	if (nMyType == T_HOST)
+	{
+		SOCKADDR_IN tSvAddr = { 0, };
+		hSvSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+		tAddr.sin_family = AF_INET;
+		tAddr.sin_port = htons(MY_PORT);
+		tAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
+		bind(hSvSock, (SOCKADDR*)& tSvAddr, sizeof(tSvAddr));
+		listen(hSvSock, 1);
+		int nAddrSize = sizeof(tSvAddr);
+		hSocket = accept(hSvSock, (SOCKADDR*)& tSvAddr, &nAddrSize);
+	}
+	//방 참여
+	else if (nMyType == T_CLIENT)
+	{
+		hSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+		tAddr.sin_family = AF_INET;
+		tAddr.sin_port = htons(MY_PORT);
+		tAddr.sin_addr.S_un.S_addr = inet_pton(PF_INET, "127.0.0.1", nullptr);
+		connect(hSocket, (SOCKADDR*)& tAddr, sizeof(tAddr));
+	}
+	//취소
+	else { return; }
+	
 	float fPrevTime = 0;	//한 프레임 실행 이전 시간 (T)
 	float fCurTime = clock() * 0.001f;	//한 프레임 실행 이후 시간 (T')	 [ 단위 : 초(s) ]
 	float time = 0;			//게임 내 경과 시간 (CPU 사정에 따라 실제 경과 시간과 다름)
@@ -299,7 +407,7 @@ void MultiGameMain()
 
 	//게임 초기화
 	InitializeMltGm();
-
+	return;
 	//프레임
 	while (true)
 	{
