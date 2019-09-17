@@ -76,6 +76,7 @@ void UpdateMltGm(const float fDeltaTime, const float fTime);		//
 void RenderMltGm();		//
 void FinalizeMltGm();		//
 int MultiMenuSelect();
+string InputIPAddr();
 void MultiGameMain();
 wstring* ReplaceString(wstring* str, const wstring& from, const wstring& to);		//문자열 검색 및 치환
 unsigned int MainMenuPrint(int nMoveDirect);		//메인 화면 출력
@@ -301,7 +302,7 @@ void FinalizeMltGm()
 int MultiMenuSelect()
 {
 	int nSelectNum = 0;
-	static wstring wstrMsg[] =
+	wstring wstrMsg[] =
 	{
 		L"같이하기는 1:1 대결(2인)만 지원합니다.",
 		L"▶ 방 만들기 - 상대방의 참여를 기다립니다.",
@@ -362,8 +363,81 @@ int MultiMenuSelect()
 	}
 }
 
-char* InputIPAddr()
+string InputIPAddr()
 {
+	wstring wstrMsg[2] =
+	{
+		L"참여할 상대의 IP를 입력해주세요.",
+		L""
+	};
+	g_Renderer.ResetBuffer();
+	g_Renderer.UpdateBuffer(wstrMsg, 2);
+	g_Renderer.Rendering();
+	g_Renderer.ResetBuffer();
+
+	while (true)
+	{
+		//키 입력
+		if (g_Input.IsAnyKeyDown())
+		{
+			switch (g_Input.GetInputKey())
+			{
+				//숫자 0~9 , Dot(.)키
+			case Input::N0:
+				wstrMsg[1] += L'0';
+				break;
+			case Input::N1:
+				wstrMsg[1] += L'1';
+				break;
+			case Input::N2:
+				wstrMsg[1] += L'2';
+				break;
+			case Input::N3:
+				wstrMsg[1] += L'3';
+				break;
+			case Input::N4:
+				wstrMsg[1] += L'4';
+				break;
+			case Input::N5:
+				wstrMsg[1] += L'5';
+				break;
+			case Input::N6:
+				wstrMsg[1] += L'6';
+				break;
+			case Input::N7:
+				wstrMsg[1] += L'7';
+				break;
+			case Input::N8:
+				wstrMsg[1] += L'8';
+				break;
+			case Input::N9:
+				wstrMsg[1] += L'9';
+				break;
+			case Input::DOT:
+				wstrMsg[1] += L'.';
+				break;
+				
+				//문자 한 칸 지우기
+			case Input::BACKSPACE:
+				if (wstrMsg[1].length() > 0)	//문자열이 비어있지 않으면
+				{
+					wstrMsg[1].pop_back();	//맨 뒤 글자 지우기
+				}
+				g_Renderer.ResetBuffer();
+				break;
+				
+				//엔터 입력 시 반환
+			case Input::ENTER:
+				//wstring to string
+				string strIP(wstrMsg[1].begin(), wstrMsg[1].end());
+				return strIP;
+				break;
+			}
+
+			g_Renderer.UpdateBuffer(wstrMsg, 2);
+			g_Renderer.Rendering();
+		}
+	}
 }
 
 void MultiGameMain()
@@ -371,12 +445,19 @@ void MultiGameMain()
 	int nMyType = MultiMenuSelect();
 	SOCKET hSvSock, hSocket;
 	SOCKADDR_IN tAddr = { 0, };
-	return;
 	//방 만들기
 	if (nMyType == T_HOST)
 	{
 		SOCKADDR_IN tSvAddr = { 0, };
 		hSvSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (hSvSock < 0)
+		{
+			const wstring wstrErr = L"방 생성 실패 (socket = -1 : 소켓 생성에 실패하였습니다.)";
+			g_Renderer.ResetBuffer();
+			g_Renderer.UpdateBuffer(&wstrErr, 1);
+			g_Renderer.Rendering();
+			return;
+		}
 		tAddr.sin_family = AF_INET;
 		tAddr.sin_port = htons(MY_PORT);
 		tAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
@@ -388,11 +469,27 @@ void MultiGameMain()
 	//방 참여
 	else if (nMyType == T_CLIENT)
 	{
+		string strIP = InputIPAddr();
 		hSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (hSocket < 0)
+		{
+			const wstring wstrErr = L"방 참여 실패 (socket = -1 : 소켓 생성에 실패하였습니다.)";
+			g_Renderer.ResetBuffer();
+			g_Renderer.UpdateBuffer(&wstrErr, 1);
+			g_Renderer.Rendering();
+			return;
+		}
 		tAddr.sin_family = AF_INET;
 		tAddr.sin_port = htons(MY_PORT);
-		tAddr.sin_addr.S_un.S_addr = inet_pton(PF_INET, "127.0.0.1", nullptr);
-		connect(hSocket, (SOCKADDR*)& tAddr, sizeof(tAddr));
+		tAddr.sin_addr.S_un.S_addr = inet_pton(PF_INET, strIP.c_str(), nullptr);
+		if (connect(hSocket, (SOCKADDR*)& tAddr, sizeof(tAddr)) < 0)
+		{
+			const wstring wstrErr = L"방 참여 실패 (connect = -1 : 게임이 이미 시작된 방이거나 잘못된 IP주소 입니다.)";
+			g_Renderer.ResetBuffer();
+			g_Renderer.UpdateBuffer(&wstrErr, 1);
+			g_Renderer.Rendering();
+			return;
+		}
 	}
 	//취소
 	else { return; }
